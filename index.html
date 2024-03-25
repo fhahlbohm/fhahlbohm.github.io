@@ -48,15 +48,64 @@
             </tr>
           </tbody></table>
           <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-    
-      <tr onmouseout="plenopticpoints_stop()" onmouseover="plenopticpoints_start()"  bgcolor="#ffffd0">
+
+      <!-- INPC -->
+      <tr onmouseout="inpc_stop()" onmouseover="inpc_start()"  bgcolor="#ffffd0">
+        <td style="padding:20px;width:25%;vertical-align:middle">
+          <div class="one">
+            <div class="two" id='inpc_image'><video  width=100% height=100% muted autoplay loop>
+            <source src="assets/inpc_video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+            </video></div>
+            <img src='assets/inpc_image.jpg' width="160">
+          </div>
+          <script type="text/javascript">
+            function inpc_start() {
+              document.getElementById('inpc_image').style.opacity = "1";
+            }
+
+            function inpc_stop() {
+              document.getElementById('inpc_image').style.opacity = "0";
+            }
+            inpc_stop()
+          </script>
+        </td>
+        <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://fhahlbohm.github.io/inpc">
+            <span class="papertitle">INPC: Implicit Neural Point Clouds for Radiance Field Rendering</span>
+          </a>
+          <br>
+          <strong>Florian Hahlbohm</strong>,
+          <a href="https://lfranke.github.io/">Linus Franke</a>,
+          <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
+          <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
+          <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
+          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+          <br>
+          <em>arXiv</em>, 2024
+          <br>
+          <a href="https://fhahlbohm.github.io/inpc">project page</a>
+          /
+          <a href="https://fhahlbohm.github.io/inpc">paper</a>
+          /
+          <a href="https://youtu.be/UqDlS3QGNMo">video</a>
+<!--          /-->
+<!--          <a href="TODO">code</a>-->
+          <p></p>
+          <p>
+          Representing a point cloud implicitly provides better image quality for point-based radiance field methods.
+          </p>
+        </td>
+      </tr>
+      <!-- PlenopticPoints -->
+      <tr onmouseout="plenopticpoints_stop()" onmouseover="plenopticpoints_start()">
         <td style="padding:20px;width:25%;vertical-align:middle">
           <div class="one">
             <div class="two" id='plenopticpoints_image'><video  width=100% height=100% muted autoplay loop>
-            <source src="data/plenopticpoints_video.mp4" type="video/mp4">
+            <source src="assets/plenopticpoints_video.mp4" type="video/mp4">
             Your browser does not support the video tag.
             </video></div>
-            <img src='data/plenopticpoints_image.jpg' width="160">
+            <img src='assets/plenopticpoints_image.jpg' width="160">
           </div>
           <script type="text/javascript">
             function plenopticpoints_start() {
