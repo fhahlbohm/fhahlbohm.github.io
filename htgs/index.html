@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency</title>
+
+    <meta name="description" content="A perspective-correct and view-consistent approach for 3D Gaussian splatting accelerated through hybrid transparency."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:image" content="https://fhahlbohm.github.io/htgs/assets/htgs_teaser.avif">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency"/>
+    <meta property="og:description" content="A perspective-correct and view-consistent approach for 3D Gaussian splatting accelerated through hybrid transparency."/>
+
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:site" content="https://fhahlbohm.github.io/htgs/"/>
+    <meta name="twitter:title" content="Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency"/>
+    <meta name="twitter:description" content="We present a perspective-correct and view-consistent approach for 3D Gaussian splatting and how it can be accelerated using hybrid transparency."/>
+    <meta name="twitter:image" content="https://fhahlbohm.github.io/htgs/assets/htgs_teaser.avif"/>
+
+    <link rel="shortcut icon" href="assets/htgs_icon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <script src="js/video_comparison.js"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css"/>
+</head>
+
+<body>
+<div class="container" id="main">
+    <div class="row">
+        <h2 class="col-md-12 text-center">
+            Efficient Perspective-Correct 3D Gaussian Splatting<br>Using Hybrid Transparency<br>
+            <small>
+                arXiv
+            </small>
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block"><a href="https://fhahlbohm.github.io/">Florian Hahlbohm<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/friederichs/">Fabian Friederichs<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://reality.tf.fau.de/weyrich.html">Tim Weyrich<sup>2,3</sup></a>,</span>
+                <span class="author-block"><a href="https://lfranke.github.io/">Linus Franke<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://moritzkappel.github.io/">Moritz Kappel<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/castillo/">Susana Castillo<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/eisemann/">Martin Eisemann<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/magnor/">Marcus Magnor<sup>1</sup></a></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>1</sup>TU Braunschweig</span>
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>2</sup>FAU Erlangen-Nürnberg</span>
+                <span class="author-block is-size-5"><sup>3</sup>University College London</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-center">
+            <ul class="nav nav-pills nav-justified">
+                <li>
+                    <a href="">
+                        <img src="assets/htgs_paper.avif" height="60px">
+                        <h4><strong>Paper</strong></h4>
+                    </a>
+                </li>
+                <!--<li>
+                    <a href="https://github.com/fhahlbohm/">
+                        <img src="assets/github.png" height="60px">
+                        <h4><strong>Code<br>(Coming Soon)</strong></h4>
+                    </a>
+                </li>-->
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <img src="assets/htgs_teaser.avif" style="width:100%">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>+ Perspective-Correct</h3>
+            <video id="v0" width="100%" autoplay loop muted>
+                <source src="assets/htgs_persp_correct_project_page.mp4" type="video/mp4"/>
+            </video>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>+ No Popping</h3>
+            <div class="video-compare-container">
+                <video class="video" width=100% id="v2" loop playsinline autoplay muted src="assets/htgs_popping_artifacts_project_page.mp4" onplay="resizeAndPlay(this)"></video>
+                <canvas height=0 class="videoMerge" id="v2Merge"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Abstract</h3>
+            <hr>
+            <p class="text-justify">
+                3D Gaussian Splats (3DGS) have proven a versatile rendering primitive, both for inverse rendering as well as real-time exploration
+                of scenes. In these applications, coherence across camera frames and multiple views is crucial, be it for robust convergence of a
+                scene reconstruction or for artifact-free fly-throughs. Recent work started mitigating artifacts that break multi-view coherence,
+                including popping artifacts due to inconsistent transparency sorting and perspective-correct outlines of (2D) splats. At the same
+                time, real-time requirements forced such implementations to accept compromises in how transparency of large assemblies of
+                3D Gaussians is resolved, in turn breaking coherence in other ways.
+                <br>
+                In our work, we aim at achieving maximum coherence, by rendering fully perspective-correct 3D Gaussians while using a high-quality
+                approximation of accurate blending, hybrid transparency, on a per-pixel level, in order to retain real-time frame rates.
+                Our fast and perspectively accurate approach for evaluation of 3D Gaussians does not require matrix inversions, thereby ensuring
+                numerical stability and eliminating the need for special handling of degenerate splats, and the hybrid transparency formulation
+                for blending maintains similar quality as fully resolved per-pixel transparencies at a fraction of the rendering costs.
+                <br>
+                We further show that each of these two components can be independently integrated into Gaussian splatting systems.
+                In combination, they achieve up to 2× higher frame rates, 2× faster optimization, and equal or better image quality
+                with fewer rendering artifacts compared to traditional 3DGS on common benchmarks.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Accurate Splat Bounding and Evaluation</h3>
+            <hr>
+            <img src="assets/math_visualization.avif" style="width:100%">
+            <p class="text-justify">
+                The perspectively correct screen-space bounding box of a splat (a) is given by the projection of its bounding frustum in view
+                space (b). When transformed into local splat coordinates, the frustum planes align with tangential planes of the unit sphere (c). Our approach
+                for splat evaluation along viewing rays makes use of the Plücker coordinate representation ( 𝒅 : 𝒎). In local splat coordinates, the point
+                along the ray that maximizes the Gaussian’s value corresponds to the point 𝒙 that minimizes the perpendicular distance ∥𝒙∥ to the origin (d).
+                Parts (a-c) courtesy of Weyrich et al. [WHA*07]; used with permission.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Temporally-Stable Rendering via Hybrid Transparency</h3>
+            <hr>
+            <img src="assets/ht_ablations.avif" style="width:100%">
+            <p class="text-justify">
+                Visual comparisons for different model configurations regarding our hybrid transparency approach. Using a smaller core size 𝐾
+                causes issues for reflective surfaces, as radiance fields commonly model these using semi-transparency. Disabling the order-independent tail
+                only slightly reduces quality, especially in the sky, whereas not using it during optimization results in catastrophic failure.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Quantitative Results</h3>
+            <hr>
+            <img src="assets/htgs_quantitative_results.avif" style="width:100%">
+            <p class="text-justify">
+                Quantitative comparisons on the Mip-NeRF360 and Tanks and Temples datasets. Our approach of using perspectively correct splat
+                evaluation in combination with hybrid transparency significantly reduces training and rendering times with image quality being similar to the
+                baselines’. Excluding Zip-NeRF, the three best results are highlighted in green in descending order of saturation.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Visual Comparisons</h3>
+            <hr>
+            <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                    <img src="assets/comparisons/room_3dgs.avif" width="100%">
+                    <div class="bottom-left"><span class="image-comparison-method-name">3DGS</span></div>
+                </span>
+                <span slot="second" class="img-container">
+                    <img src="assets/comparisons/room_ours.avif" width="100%">
+                    <div class="bottom-right"><span class="image-comparison-method-name">Ours</span></div>
+                </span>
+            </img-comparison-slider>
+            <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                    <img src="assets/comparisons/train_2dgs.avif" width="100%">
+                    <div class="bottom-left"><span class="image-comparison-method-name">2DGS</span></div>
+                </span>
+                <span slot="second" class="img-container">
+                    <img src="assets/comparisons/train_ours.avif" width="100%">
+                    <div class="bottom-right"><span class="image-comparison-method-name">Ours</span></div>
+                </span>
+            </img-comparison-slider>
+            <img-comparison-slider style="width: 100%;" hover="hover">
+                <span slot="first" class="img-container">
+                    <img src="assets/comparisons/treehill_stopthepop.avif" width="100%">
+                    <div class="bottom-left"><span class="image-comparison-method-name">StopThePop</span></div>
+                </span>
+                <span slot="second" class="img-container">
+                    <img src="assets/comparisons/treehill_ours.avif" width="100%">
+                    <div class="bottom-right"><span class="image-comparison-method-name">Ours</span></div>
+                </span>
+            </img-comparison-slider>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Concurrent Work</h3>
+            <hr>
+            <p class="text-justify">
+                <a href="https://half-potato.gitlab.io/posts/ever/">EVER</a> also addresses limitations of 3D Gaussian splatting.
+                It shows that the 3D Gaussians can be replaced with constant density ellipsoids to allow for the use of exact volume rendering.
+                Compared to our approach, their rendering is slower as they use a ray tracing framework but the
+                volumetric rendering improves image quality significantly.
+                Similarly check out the recent <a href="https://humansensinglab.github.io/taming-3dgs/">Taming 3DGS</a>, which
+                proposes a controllable densification strategy alongside multiple improvements to reduce training times.
+                We believe that future work could combine these ideas with our approach for even better results.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Citation</h3>
+            <hr>
+            <pre><code>@article{hahlbohm2024htgs,
+    title={Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency},
+    author={Florian Hahlbohm and Fabian Friederichs and Tim Weyrich and Linus Franke and Moritz Kappel and Susana Castillo and Marc Stamminger and Martin Eisemann and Marcus Magnor},
+    journal={arXiv},
+    year={2024}
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Acknowledgements</h3>
+            <hr>
+            We would like to thank Timon Scholz and Carlotta Harms for their help with comparisons and the supplemental material.
+            <br>
+            The authors gratefully acknowledge financial support from the German Research Foundation (DFG) for the projects “Real-Action VR” (ID 523421583) and “Increasing Realism of Omnidirectional Videos in Virtual Reality” (ID 491805996), as well as from the L3S Research Center, Hanover, Germany.
+            <br>
+            Linus Franke was supported by the 5G innovation program of the German Federal Ministry for Digital and Transport under the funding code 165GU103B.
+            <br>
+            <br>
+            <p class="text-justify">
+                All scenes shown above are from the <a href="https://jonbarron.info/mipnerf360/">Mip-NeRF360</a> and
+                <a href="https://www.tanksandtemples.org/">Tanks and Temples</a> datasets.
+                The website template was adapted from <a href="https://jonbarron.info/zipnerf/">Zip-NeRF</a>.
+                For the comparison sliders, we use <a href="https://github.com/sneas/img-comparison-slider">img-comparison-slider</a>
+                and the video comparison tool from <a href="https://dorverbin.github.io/refnerf/index.html">Ref-NeRF</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
