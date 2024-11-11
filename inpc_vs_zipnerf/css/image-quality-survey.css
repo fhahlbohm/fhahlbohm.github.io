@@ -70,6 +70,14 @@ body {
 .container-fluid {
     height: 100vh;
 }
+.image-card-spinner {
+    background-position: center;
+    background-image: url('../assets/loading.svg');
+    background-repeat: no-repeat;
+    background-size: 15%;
+    min-width: 100%;
+    aspect-ratio: 16/9;
+}
 .image-card {
     width: 100%;
     cursor: pointer;

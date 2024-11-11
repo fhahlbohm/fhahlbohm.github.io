@@ -25,18 +25,34 @@ function toggleResultsBlur() {
 
 function loadImagePair() {
     if (currentPair < imagePairs.length) {
+        const leftImage = document.getElementById("left-image");
+        const rightImage = document.getElementById("right-image");
+        const leftImageCard = document.getElementById("left-image-card");
+        const rightImageCard = document.getElementById("right-image-card");
+        leftImage.style.opacity = "0%";
+        rightImage.style.opacity = "0%";
+        leftImageCard.onclick = () => {};
+        rightImageCard.onclick = () => {};
+        leftImage.onload = () => {
+            leftImage.style.opacity = "100%";
+            leftImageCard.onclick = () => selectImage(0);
+        }
+        rightImage.onload = () => {
+            rightImage.style.opacity = "100%";
+            rightImageCard.onclick = () => selectImage(1);
+        }
         const {inpc, zipnerf} = imagePairs[currentPair];
         wasPairSwapped = Math.random() < 0.5;
         if (wasPairSwapped) {
-            document.getElementById("left-image").src = zipnerf;
-            document.getElementById("right-image").src = inpc;
+            leftImage.src = zipnerf;
+            rightImage.src = inpc;
         }
         else {
-            document.getElementById("left-image").src = inpc;
-            document.getElementById("right-image").src = zipnerf;
+            leftImage.src = inpc;
+            rightImage.src = zipnerf;
         }
-        document.getElementById("left-image").title = "";
-        document.getElementById("right-image").title = "";
+        leftImage.title = "";
+        rightImage.title = "";
     }
     else endSurvey();
 }
