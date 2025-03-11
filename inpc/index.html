@@ -39,61 +39,39 @@
         <h2 class="col-md-12 text-center">
             <b>INPC</b>: Implicit Neural Point Clouds for Radiance Field Rendering<br>
             <small>
-                arXiv
+                3DV 2025 (Oral Presentation)
             </small>
         </h2>
     </div>
     <div class="row">
         <div class="col-md-12 text-center">
-            <ul class="list-inline">
-                <li>
-                    <a style="text-decoration:none" href="https://fhahlbohm.github.io">Florian Hahlbohm</a>
-                    <br>TU Braunschweig
-                </li>
-                <li>
-                    <a style="text-decoration:none" href="https://lfranke.github.io">Linus Franke</a>
-                    <br>FAU Erlangen-Nürnberg
-                </li>
-                <li>
-                    <a style="text-decoration:none" href="https://moritzkappel.github.io/">Moritz Kappel</a>
-                    <br>TU Braunschweig
-                </li>
-                <li>
-                    <a style="text-decoration:none" href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>
-                    <br>TU Braunschweig
-                </li>
-                <li>
-                    <a style="text-decoration:none" href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>
-                    <br>FAU Erlangen-Nürnberg
-                </li>
-                <li>
-                    <a style="text-decoration:none" href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-                    <br>TU Braunschweig
-                </li>
-            </ul>
+            <div class="is-size-5 publication-authors">
+                <span class="author-block"><a href="https://fhahlbohm.github.io/">Florian Hahlbohm<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://lfranke.github.io/">Linus Franke<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://moritzkappel.github.io/">Moritz Kappel<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor<sup>1,3</sup></a></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>1</sup>TU Braunschweig</span>
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>2</sup>FAU Erlangen-Nürnberg</span>
+                <span class="author-block is-size-5"><sup>3</sup>University of New Mexico</span>
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-4 col-md-offset-4 text-center">
             <ul class="nav nav-pills nav-justified">
-                <li>
-                    <a href="https://arxiv.org/abs/2403.16862">
-                        <img src="assets/inpc_paper.jpg" height="60px">
-                        <h4><strong>Paper</strong></h4>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://youtu.be/UqDlS3QGNMo">
-                        <img src="assets/youtube_icon.png" height="60px">
-                        <h4><strong>Video</strong></h4>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://github.com/fhahlbohm/">
-                        <img src="assets/github.png" height="60px">
-                        <h4><strong>Code<br>(Coming Soon)</strong></h4>
-                    </a>
-                </li>
+                <li><a href="https://arxiv.org/abs/2403.16862"><img src="assets/inpc_paper.avif" height="60px"><h4><strong>Paper</strong></h4></a></li>
+<!--                <li><a href="https://github.com/nerficg-project/INPC"><img src="assets/github.png" height="60px"><h4><strong>Code</strong></h4></a></li>-->
+                <li><a href="https://youtu.be/XnMlwvNb2-Q"><img src="assets/youtube_icon.png" height="60px"><h4><strong>Video</strong></h4></a></li>
+<!--                <li><a href="https://graphics.tu-bs.de/upload/publications/hahlbohm2025inpc/inpc_full_eval.zip"><img src="assets/photos_icon.png" height="60px"><h4><strong>Results</strong></h4></a></li>-->
             </ul>
         </div>
     </div>
@@ -111,19 +89,21 @@
             <h3>Abstract</h3>
             <hr>
             <p class="text-justify">
-                We introduce a new approach for reconstruction and novel-view synthesis of unbounded real-world scenes.
+                We introduce a new approach for reconstruction and novel view synthesis of unbounded real-world scenes.
                 <br>
                 In contrast to previous methods using either volumetric fields, grid-based models, or discrete point
-                cloud proxies, we propose a hybrid scene representation, which implicitly encodes a point cloud in a
-                continuous octree-based probability field and a multi-resolution hash grid.
+                cloud proxies, we propose a hybrid scene representation, which implicitly encodes the geometry in a
+                continuous octree-based probability field and view-dependent appearance in a multi-resolution hash grid.
+                This allows for extraction of arbitrary explicit point clouds, which can be rendered using rasterization.
                 <br>
-                In doing so, we combine the benefits of both worlds by retaining favorable behavior during optimization:
-                Our novel implicit point cloud representation and differentiable rasterizer enable fast rendering while
-                preserving fine geometric detail without depending on initial priors like SfM point clouds.
+                In doing so, we combine the benefits of both worlds and retain favorable behavior during optimization:
+                Our novel implicit point cloud representation and differentiable bilinear rasterizer enable fast
+                rendering while preserving the fine geometric detail captured by volumetric neural fields.
+                Furthermore, this representation does not depend on priors like structure-from-motion point clouds.
                 <br>
-                Our method achieves state-of-the-art image quality on several common benchmark datasets.
-                Furthermore, we achieve fast inference at interactive frame rates, and can extract explicit point clouds
-                to further enhance performance.
+                Our method achieves state-of-the-art image quality on common benchmarks.
+                Furthermore, we achieve fast inference at interactive frame rates, and can convert our trained model
+                into a large, explicit point cloud to further enhance performance.
             </p>
         </div>
 
@@ -133,13 +113,13 @@
         <div class="col-md-10 col-md-offset-1">
             <h3>Pipeline</h3>
             <hr>
-            <img src="assets/inpc_pipeline.jpg" style="width:100%">
+            <img src="assets/inpc_pipeline.avif" style="width:100%">
             <p class="text-justify">
                 <br>
                 We introduce the implicit point cloud, a combination of a point probability field stored in an
                 octree and implicitly stored appearance features. To render an image for a given viewpoint, we sample
                 the representation by estimating point positions and querying the multi-resolution hash grid for
-                per-point features. This explicit point cloud, together with a small background MLP is then rendered
+                per-point features. This explicit point cloud &ndash; together with a small background MLP &ndash; is then rendered
                 with a bilinear point splatting module and processed by a CNN. During optimization, the neural networks
                 as well as the implicit point cloud are optimized, efficiently reconstructing the scene.
                 <br>
@@ -176,68 +156,89 @@
 
     <div class="row">
         <div class="col-md-10 col-md-offset-1">
+            <h3>User Study</h3>
+            <hr>
+            <p class="text-justify">
+                We complement our evaluation by conducting a perceptual experiment in which we compare INPC
+                against Zip-NeRF, as the latter achieves the best quality metrics among the compared-against methods.
+                We followed a fully randomized, within-participants experimental design with a 2AFC task.
+                Our 17 participants saw the results of both methods side-by-side (one pair at a time,
+                in random order and screen side, with a different order per participant) and were instructed
+                to select the image they preferred.
+                The 55 stimuli covered all 17 evaluated scenes and consisted of a minimum of 3 frames per scene.
+                Our method was favored by the participants on an average of 69.41% of the cases,
+                with all participants preferring our results with a ratio above the chance line.
+            </p>
+            <p class="text-center">
+                <a href="https://fhahlbohm.github.io/inpc_vs_zipnerf/"><strong>>> Click here to try our web version of the user study  <<</strong></a>
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
             <h3>Comparisons</h3>
             <hr>
             <h3>3DGS</h3>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/flowers_3dgs.jpg" width="100%">
+                    <img src="assets/comparisons/flowers_3dgs.avif" width="100%">
                     <span class="bottom-left">3DGS</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/flowers_ours.jpg" width="100%">
+                    <img src="assets/comparisons/flowers_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/train_3dgs.jpg" width="100%">
+                    <img src="assets/comparisons/train_3dgs.avif" width="100%">
                     <span class="bottom-left">3DGS</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/train_ours.jpg" width="100%">
+                    <img src="assets/comparisons/train_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
             <h3>Zip-NeRF</h3>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/bicycle_zipnerf.jpg" width="100%">
+                    <img src="assets/comparisons/bicycle_zipnerf.avif" width="100%">
                     <span class="bottom-left">Zip-NeRF</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/bicycle_ours.jpg" width="100%">
+                    <img src="assets/comparisons/bicycle_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/horse_zipnerf.jpg" width="100%">
+                    <img src="assets/comparisons/horse_zipnerf.avif" width="100%">
                     <span class="bottom-left">Zip-NeRF</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/horse_ours.jpg" width="100%">
+                    <img src="assets/comparisons/horse_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
             <h3>TRIPS</h3>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/stump_trips.jpg" width="100%">
+                    <img src="assets/comparisons/stump_trips.avif" width="100%">
                     <span class="bottom-left">TRIPS</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/stump_ours.jpg" width="100%">
+                    <img src="assets/comparisons/stump_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
             <img-comparison-slider style="width: 100%;" hover="hover">
                 <span slot="first" class="img-container">
-                    <img src="assets/comparisons/lighthouse_trips.jpg" width="100%">
+                    <img src="assets/comparisons/lighthouse_trips.avif" width="100%">
                     <span class="bottom-left">TRIPS</span>
                 </span>
                 <span slot="second" class="img-container">
-                    <img src="assets/comparisons/lighthouse_ours.jpg" width="100%">
+                    <img src="assets/comparisons/lighthouse_ours.avif" width="100%">
                     <span class="bottom-right">Ours</span>
                 </span>
             </img-comparison-slider>
@@ -273,7 +274,7 @@
 
     <div class="row">
         <div class="col-md-10 col-md-offset-1">
-            <h3>Concurrent Work</h3>
+            <h3>Related Work</h3>
             <hr>
             Please also check out <a href="https://m-niemeyer.github.io/radsplat/">RadSplat</a>, a work that also
             improves upon best-quality baselines in terms of both quality and inference frame rates. They optimize a
@@ -287,11 +288,13 @@
         <div class="col-md-10 col-md-offset-1">
             <h3>Citation</h3>
             <hr>
-            <pre><code>@article{hahlbohm2024inpc,
-    title={INPC: Implicit Neural Point Clouds for Radiance Field Rendering},
-    author={Florian Hahlbohm and Linus Franke and Moritz Kappel and Susana Castillo and Marc Stamminger and Marcus Magnor},
-    journal={arXiv},
-    year={2024}
+            <pre><code>@inproceedings{hahlbohm2025inpc,
+  title     = {{INPC}: Implicit Neural Point Clouds for Radiance Field Rendering},
+  author    = {Hahlbohm, Florian and Franke, Linus and Kappel, Moritz and Castillo, Susana and Eisemann, Martin and Stamminger, Marc and Magnor, Marcus},
+  booktitle = {International Conference on 3D Vision},
+  doi       = {tba},
+  year      = {2025},
+  url       = {https://fhahlbohm.github.io/inpc/}
 }</code></pre>
         </div>
     </div>
@@ -300,17 +303,17 @@
         <div class="col-md-10 col-md-offset-1">
             <h3>Acknowledgements</h3>
             <hr>
-            We would like to thank Peter Kramer for his help with the video as well as Timon Scholz for helping with the
-            implementation of our viewer.
+            We would like to thank Peter Kramer for his help with the video, Timon Scholz for his help with the
+            implementation of our viewer, and Fabian Friederichs and Leon Overkämping for their valuable suggestions.
             <br>
-            The authors gratefully acknowledge financial support by the German Research Foundation (DFG) for funding of
-            the projects “Immersive Digital Reality” (ID 283369270) and “Real-Action VR” (ID 523421583) as well as the
-            scientific support and HPC resources provided by the Erlangen National High Performance Computing Center
-            (NHR@FAU) of the Friedrich-Alexander-Universität Erlangen-Nürnberg (FAU) under the NHR project b162dc. NHR
-            funding is provided by federal and Bavarian state authorities. NHR@FAU hardware is partially funded by the
-            DFG (ID 440719683).
+            This work was partially funded by the DFG (“Real-Action VR”, ID 523421583)
+            and the L3S Research Center, Hanover, Germany.
+            We thank the Erlangen National High Performance Computing Center (NHR@FAU) for the provided scientific
+            support and HPC resources under the NHR project b162dc. NHR funding is provided by federal and Bavarian
+            state authorities. NHR@FAU hardware is partially funded by the DFG (ID 440719683).
             <br>
-            Linus Franke was supported by the Bayerische Forschungsstiftung (Bavarian Research Foundation) AZ-1422-20.
+            Linus Franke was supported by the Bavarian Research Foundation (AZ-1422-20) and the 5G innovation program
+            of the German Federal Ministry for Digital and Transport under the funding code 165GU103B.
             <br>
             <br>
             <p class="text-justify">
