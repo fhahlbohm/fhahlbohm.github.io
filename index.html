@@ -43,12 +43,59 @@
               <td style="padding:20px;width:100%;vertical-align:middle">
                 <h2>Research</h2>
                 <p>
-                  I like NeRFs and what came after.
+                  My work is focused on advancing fast and accurate representations for reconstruction and view synthesis from images.
                 </p>
               </td>
             </tr>
           </tbody></table>
           <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+      <!-- Splatshop -->
+      <tr onmouseout="splatshop_stop()" onmouseover="splatshop_start()">
+        <td style="padding:20px;width:25%;vertical-align:middle">
+          <div class="one">
+            <div class="two" id='splatshop_video' style="transition: opacity 0.4s">
+              <video width=100% height=100% muted autoplay loop>
+                <source src="assets/splatshop_video.mp4" type="video/mp4">Your browser does not support the video tag.
+              </video>
+            </div>
+            <img src='assets/splatshop_image.jpg' id='splatshop_image' width="160" style="transition: opacity 0.4s">
+          </div>
+          <script type="text/javascript">
+            function splatshop_start() {
+              document.getElementById('splatshop_image').style.opacity = "0";
+              document.getElementById('splatshop_video').style.opacity = "1";
+            }
+
+            function splatshop_stop() {
+              document.getElementById('splatshop_video').style.opacity = "0";
+              document.getElementById('splatshop_image').style.opacity = "1";
+            }
+            splatshop_stop()
+          </script>
+        </td>
+        <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://github.com/m-schuetz/Splatshop">
+            <span class="papertitle">Splatshop: Efficiently Editing Large Gaussian Splat Models</span>
+          </a>
+          <br>
+          <a href="https://www.cg.tuwien.ac.at/staff/MarkusSch%C3%BCtz">Markus Schütz</a>,
+          <a href="https://momentsingraphics.de/About.html">Christoph Peters</a>,
+          <strong>Florian Hahlbohm</strong>,
+          <a href="https://graphics.tudelft.nl/~eisemann/">Elmar Eisemann</a>,
+          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
+          <a href="https://www.cg.tuwien.ac.at/staff/MichaelWimmer">Michael Wimmer</a>
+          <br>
+          <em>High-Performance Graphics (Computer Graphics Forum)</em>, 2025
+          <br>
+          <a href="https://diglib.eg.org/items/5dbb09e2-5a8d-4d55-ac0f-c6e064737b0d">paper</a>
+          /
+          <a href="https://github.com/m-schuetz/Splatshop">code</a>
+          <p></p>
+          <p>
+            A highly optimized toolbox for interactive editing of 3D Gaussian splatting models on Desktop and in VR.
+          </p>
+        </td>
+      </tr>
       <!-- HTGS -->
       <tr onmouseout="htgs_stop()" onmouseover="htgs_start()">
         <td style="padding:20px;width:25%;vertical-align:middle">
@@ -190,7 +237,7 @@
           <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
           <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
           <br>
-          <em>3DV</em>, 2025 <span style="color: red;"><strong>(Oral Presentation)</strong></span>
+          <em>3DV</em>, 2025 (Oral)
           <br>
           <a href="https://fhahlbohm.github.io/inpc/">project page</a>
           /
