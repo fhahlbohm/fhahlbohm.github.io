@@ -49,6 +49,55 @@
             </tr>
           </tbody></table>
           <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+      <!-- SPaGS -->
+      <tr onmouseout="spags_stop()" onmouseover="spags_start()">
+        <td style="padding:20px;width:25%;vertical-align:middle">
+          <div class="one">
+            <div class="two" id='spags_video' style="transition: opacity 0.4s">
+              <video width=100% height=100% muted autoplay loop>
+                <source src="assets/spags_video.mp4" type="video/mp4">Your browser does not support the video tag.
+              </video>
+            </div>
+            <img src='assets/spags_image.jpg' id='spags_image' width="160" style="transition: opacity 0.4s">
+          </div>
+          <script type="text/javascript">
+            function spags_start() {
+              document.getElementById('spags_image').style.opacity = "0";
+              document.getElementById('spags_video').style.opacity = "1";
+            }
+
+            function spags_stop() {
+              document.getElementById('spags_video').style.opacity = "0";
+              document.getElementById('spags_image').style.opacity = "1";
+            }
+            spags_stop()
+          </script>
+        </td>
+        <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://junboli-cn.github.io/spags/">
+            <span class="papertitle">SPaGS: Fast and Accurate 3D Gaussian Splatting for Spherical Panoramas</span>
+          </a>
+          <br>
+          <a href="https://www.cg.cs.tu-bs.de/people/li">Junbo Li</a>,
+          <strong>Florian Hahlbohm</strong>,
+          <a href="https://graphics.tu-bs.de/people/scholz-timon">Timon Scholz</a>,
+          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+          <a href="https://graphics.tu-bs.de/people/tauscher">Jan-Philipp Tauscher</a>,
+          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+          <br>
+          <em>Eurographics Symposium on Rendering (Computer Graphics Forum)</em>, 2025
+          <br>
+          <a href="https://junboli-cn.github.io/spags/">project page</a>
+          /
+          <a href="https://diglib.eg.org/items/6d5e5a75-1517-4e17-822d-ef7477a2698b">paper</a>
+          /
+          <a href="https://github.com/nerficg-project/SPaGS">code</a>
+          <p></p>
+          <p>
+            A high-quality, real-time free-viewpoint rendering approach from 360-degree panoramic images.
+          </p>
+        </td>
+      </tr>
       <!-- Splatshop -->
       <tr onmouseout="splatshop_stop()" onmouseover="splatshop_start()">
         <td style="padding:20px;width:25%;vertical-align:middle">
@@ -132,7 +181,7 @@
           <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
           <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
           <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>
+          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
           <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
           <br>
           <em>Eurographics (Computer Graphics Forum)</em>, 2025
