@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>A Bag of Tricks for Efficient Implicit Neural Point Clouds</title>
+
+    <meta name="description" content="Improvements for point-based novel-view synthesis with implicit neural point clouds."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:image" content="https://fhahlbohm.github.io/inpc_v2/assets/inpc_v2_model_og.jpg">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="A Bag of Tricks for Efficient Implicit Neural Point Clouds"/>
+    <meta property="og:description" content="Improvements for point-based novel-view synthesis with implicit neural point clouds."/>
+
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:site" content="https://fhahlbohm.github.io/inpc_v2/"/>
+    <meta name="twitter:title" content="A Bag of Tricks for Efficient Implicit Neural Point Clouds"/>
+    <meta name="twitter:description" content="Introduces various improvements for implicit neural point clouds reducing training time and VRAM usage as well as improving frame rates and image quality during inference."/>
+    <meta name="twitter:image" content="https://fhahlbohm.github.io/inpc_v2/assets/inpc_v2_model_tw.jpg"/>
+
+    <link rel="shortcut icon" href="assets/inpc_v2_icon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css"/>
+</head>
+
+<body>
+<div class="container" id="main">
+    <div class="row">
+        <h2 class="col-md-12 text-center">
+            A Bag of Tricks for Efficient Implicit Neural Point Clouds<br>
+            <small>
+                Vision, Modeling, and Visualization 2025
+            </small>
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block"><a href="https://fhahlbohm.github.io/">Florian Hahlbohm<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://lfranke.github.io/">Linus Franke<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://orcid.org/0009-0001-7756-6702">Leon Overkämping<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://orcid.org/0009-0007-2477-2725">Paula Wespe<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor<sup>1,3</sup></a></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>1</sup>TU Braunschweig</span>
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>2</sup>FAU Erlangen-Nürnberg</span>
+                <span class="author-block is-size-5"><sup>3</sup>University of New Mexico</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-center">
+            <ul class="nav nav-pills nav-justified">
+                <li><a href=""><img src="assets/inpc_v2_paper.avif" height="60px"><h4><strong>Paper</strong><br><small>Coming Soon</small></h4></a></li>
+                <li><a href=""><img src="assets/github.png" height="60px"><h4><strong>Code</strong><br><small>Coming Soon</small></h4></a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 text-center">
+            <img src="assets/inpc_v2_teaser.avif" style="width:100%">
+            <h3 class="text-success"><b>TL;DR: Faster INPC training and rendering with less VRAM and better quality.</b></h3>
+            <p><b>Learn more about the original INPC method <a href="https://fhahlbohm.github.io/inpc/">here</a>.</b></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Abstract</h3>
+            <hr>
+            <p class="text-justify">
+                Implicit Neural Point Cloud (INPC) is a recent hybrid representation that combines the expressiveness
+                of neural fields with the efficiency of point-based rendering, achieving state-of-the-art image quality
+                in novel view synthesis. However, as with other high-quality approaches that query neural networks
+                during rendering, the practical usability of INPC is limited by comparatively slow rendering.
+                <br>
+                In this work, we present a collection of optimizations that significantly improve both the training and
+                inference performance of INPC without sacrificing visual fidelity. The most significant modifications
+                are an improved rasterizer implementation, more effective sampling techniques, and the incorporation of
+                pre-training for the convolutional neural network used for hole-filling. Furthermore, we demonstrate
+                that points can be modeled as small Gaussians during inference to further improve quality in
+                extrapolated, e.g., close-up views of the scene.
+                <br>
+                We design our implementations to be broadly applicable beyond INPC and systematically evaluate each
+                modification in a series of experiments. Our optimized INPC pipeline achieves up to 25% faster training,
+                2× faster rendering, and 20% reduced VRAM usage paired with slight image quality improvements.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>INPC Rendering with Bilinear Point Splatting and Small Gaussian Splats</h3>
+            <hr>
+            <div class="row text-center">
+                <p>
+                    Replacing the bilinear splatting used in INPC with a Gaussian splatting approach, only slightly
+                    impacts quality metrics but makes a major difference when exploring a scene in a graphical user
+                    interface. This is especially noticeable in close-up views and independent of the used sampling approach.
+                </p>
+            </div>
+            <div class="row text-center">
+                <div class="col-md-6">
+                    <h4>View-Specific Multisampling</h4>
+                    <img-comparison-slider style="width: 100%;" hover="hover">
+                        <span slot="first" class="img-container">
+                            <img src="assets/comparisons/view_specific_inpc.avif" width="100%">
+                            <span class="bottom-left">Bilinear Splatting</span>
+                        </span>
+                                <span slot="second" class="img-container">
+                            <img src="assets/comparisons/view_specific_ours.avif" width="100%">
+                            <span class="bottom-right">Small Gaussians</span>
+                        </span>
+                    </img-comparison-slider>
+                    <img src="assets/view_specific_multisampling.avif" style="width:100%">
+                    <p>
+                        Our ring buffer-based approach for view-specific multisampling reuses points from previous
+                        frames to speed up rendering by more than 2×.
+                        <br>
+                        Values for INPC<sup>†</sup> are copied from the original publication.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Global Pre-Extraction</h4>
+                    <img-comparison-slider style="width: 100%;" hover="hover">
+                        <span slot="first" class="img-container">
+                            <img src="assets/comparisons/preex_inpc.avif" width="100%">
+                            <span class="bottom-left">Bilinear Splatting</span>
+                        </span>
+                                <span slot="second" class="img-container">
+                            <img src="assets/comparisons/preex_ours.avif" width="100%">
+                            <span class="bottom-right">Small Gaussians</span>
+                        </span>
+                    </img-comparison-slider>
+                    <img src="assets/global_preextraction.avif" style="width:100%">
+                    <p>
+                        Our proposed algorithm for global pre-extraction leads to significantly improved quality, while
+                        using half the number of points (33M vs. 67M).
+                        <br>
+                        Values for INPC<sup>†</sup> are copied from the original publication.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Citation</h3>
+            <hr>
+            <pre><code>@inproceedings{hahlbohm2025inpcv2,
+  title     = {A Bag of Tricks for Efficient Implicit Neural Point Clouds},
+  author    = {Hahlbohm, Florian and Franke, Linus and Overkämping, Leon and Wespe, Paula and Castillo, Susana and Eisemann, Martin and Magnor, Marcus},
+  booktitle = {Vision, Modeling, and Visualization},
+  year      = {2025},
+  doi       = {tbd}
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Acknowledgements</h3>
+            <hr>
+            We would like to thank Timon Scholz for his help with the evaluation, as well as Brent Zoomers and
+            Moritz Kappel for their valuable suggestions and early discussions.
+            <br>
+            This work was partially funded by the DFG (“Real-Action VR”, ID 523421583)
+            and the L3S Research Center, Hanover, Germany.
+            <br>
+            <br>
+            <p class="text-justify">
+                The bicycle scene shown above is from the <a href="https://jonbarron.info/mipnerf360/">Mip-NeRF360</a> dataset.
+                The website template was adapted from <a href="https://jonbarron.info/zipnerf/">Zip-NeRF</a>, who
+                borrowed from <a href="http://mgharbi.com/">Michaël Gharbi</a> and <a
+                    href="https://dorverbin.github.io/refnerf">Ref-NeRF</a>.
+                For the comparison sliders we follow <a href="https://m-niemeyer.github.io/radsplat/">RadSplat</a> and
+                use <a href="https://github.com/sneas/img-comparison-slider">img-comparison-slider</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
