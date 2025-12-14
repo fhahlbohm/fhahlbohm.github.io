@@ -49,6 +49,49 @@
             </tr>
           </tbody></table>
       <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+      <!-- NVGS -->
+      <tr onmouseout="nvgs_stop()" onmouseover="nvgs_start()">
+        <td style="padding:20px;width:25%;vertical-align:middle">
+          <div class="one">
+            <img src="assets/nvgs_image1.jpg" id="nvgs_image1" width="160" style="position: absolute; transition: opacity 1s">
+            <img src="assets/nvgs_image2.jpg" id="nvgs_image2" width="160">
+          </div>
+          <script type="text/javascript">
+            function nvgs_start() {
+              document.getElementById("nvgs_image1").style.opacity = "0";
+            }
+
+            function nvgs_stop() {
+              document.getElementById("nvgs_image1").style.opacity = "1";
+            }
+            nvgs_stop()
+          </script>
+        </td>
+        <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://brent-zoomers.github.io/nvgs/">
+            <span class="papertitle">NVGS: Neural Visibility for Occlusion Culling in 3D Gaussian Splatting</span>
+          </a>
+          <br>
+          <a href="https://brent-zoomers.github.io/">Brent Zoomers</a>,
+          <strong>Florian Hahlbohm</strong>,
+          <a href="https://scholar.google.com/citations?user=z5LtNhIAAAAJ">Joni Vanherck</a>,
+          <a href="https://www.ljorissen.be/">Lode Jorissen</a>,
+          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
+          <a href="https://www.nickmichiels.net/">Nick Michiels</a>
+          <br>
+          <em>arXiv</em>, 2025
+          <br>
+          <a href="https://brent-zoomers.github.io/nvgs/">project page</a>
+          /
+          <a href="https://arxiv.org/abs/2511.19202">paper</a>
+          /
+          <a href="">code</a>
+          <p></p>
+          <p>
+            A method that combines neural visibility predictions for backface culling with instanced rendering of 3D Gaussian splats.
+          </p>
+        </td>
+      </tr>
       <!-- INPC v2 -->
       <tr onmouseout="inpc_v2_stop()" onmouseover="inpc_v2_start()">
         <td style="padding:20px;width:25%;vertical-align:middle">
