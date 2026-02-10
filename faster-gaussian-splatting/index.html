@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+    <title>Faster-GS: Analyzing and Improving Gaussian Splatting Optimization</title>
+
+    <meta name="description" content="A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency."/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta property="og:image" content="https://fhahlbohm.github.io/faster-gaussian-splatting/assets/fastergs_og.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="Faster-GS: Analyzing and Improving Gaussian Splatting Optimization"/>
+    <meta property="og:description" content="A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency."/>
+
+    <meta name="twitter:card" content="summary"/>
+    <meta name="twitter:site" content="https://fhahlbohm.github.io/faster-gaussian-splatting/"/>
+    <meta name="twitter:title" content="Faster-GS: Analyzing and Improving Gaussian Splatting Optimization"/>
+    <meta name="twitter:description" content="A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency."/>
+    <meta name="twitter:image" content="https://fhahlbohm.github.io/faster-gaussian-splatting/assets/fastergs_tw.jpg"/>
+
+    <link rel="shortcut icon" href="assets/fastergs_icon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/img-comparison-slider@8/dist/styles.css"/>
+</head>
+
+<body>
+<div class="container" id="main">
+    <div class="row">
+        <h2 class="col-md-12 text-center">
+            <b>Faster-GS</b>: Analyzing and Improving Gaussian Splatting Optimization<br>
+            <!--<small>arXiv 2026</small>-->
+        </h2>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block"><a href="https://fhahlbohm.github.io/">Florian Hahlbohm<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://lfranke.github.io/">Linus Franke<sup>2</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann<sup>1</sup></a>,</span>
+                <span class="author-block"><a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor<sup>1</sup></a></span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="is-size-5 publication-authors">
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>1</sup>Computer Graphics Lab, TU Braunschweig, Germany</span>
+                <span class="author-block is-size-5" style="margin-right: 1em"><sup>2</sup>Inria, Université Côte d'Azur, France</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4 text-center">
+            <ul class="nav nav-pills nav-justified">
+                <li><a href="assets/hahlbohm2026fastergs.pdf"><img src="assets/fastergs_paper.avif" height="60px"><h4><strong>Paper</strong></h4></a></li>
+                <li><a href="https://arxiv.org/abs/2602.xxxxx"><img src="assets/arxiv.png" height="60px"><h4><strong>arXiv</strong></h4></a></li>
+                <li><a href="https://github.com/nerficg-project/faster-gaussian-splatting"><img src="assets/github.png" height="60px"><h4><strong>Code</strong></h4></a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1 text-center">
+            <video id="teaser" width="100%" autoplay loop muted>
+                <source src="assets/fastergs_teaser_720p30.mp4" type="video/mp4"/>
+            </video>
+            <h3 class="text-success"><b>TL;DR: An efficient and research-friendly Gaussian Splatting framework.</b></h3>
+            <p><b>Find more details on our <a href="https://github.com/nerficg-project/faster-gaussian-splatting">GitHub</a>!</b></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Abstract</h3>
+            <hr>
+            <p class="text-justify">
+                Recent advances in 3D Gaussian Splatting (3DGS) have focused on accelerating optimization while
+                preserving reconstruction quality. However, many proposed methods entangle implementation-level
+                improvements with fundamental algorithmic modifications or trade performance for fidelity, leading to a
+                fragmented research landscape that complicates fair comparison.
+                <br>
+                In this work, we consolidate and evaluate the most effective and broadly applicable strategies from
+                prior 3DGS research and augment them with several novel optimizations. We further investigate
+                underexplored aspects of the framework, including numerical stability, Gaussian truncation, and
+                gradient approximation. The resulting system, Faster-GS, provides a rigorously optimized algorithm
+                that we evaluate across a comprehensive suite of benchmarks.
+                <br>
+                Our experiments demonstrate that Faster-GS achieves up to 5× faster training while maintaining visual
+                quality, establishing a new cost-effective and resource efficient baseline for 3DGS optimization.
+                Furthermore, we demonstrate that optimizations can be applied to 4D Gaussian reconstruction, leading to
+                efficient non-rigid scene optimization.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Citation</h3>
+            <hr>
+            <pre><code>@misc{hahlbohm2026fastergs,
+  title         = {Faster-GS: Analyzing and Improving Gaussian Splatting Optimization},
+  author        = {Florian Hahlbohm and Linus Franke and Martin Eisemann and Marcus Magnor},
+  year          = {2026},
+  eprint        = {2602.xxxxx},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2602.xxxxx},
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Acknowledgements</h3>
+            <hr>
+            This work was partially funded by the DFG projects “Real-Action VR” (ID 523421583) and “Increasing Realism of Omnidirectional Videos in Virtual Reality” (ID 491805996).
+            Linus Franke was supported by the ERC Advanced Grant NERPHYS (ID 101141721).
+            <br>
+            <br>
+            <p class="text-justify">
+                The website template was adapted from <a href="https://jonbarron.info/zipnerf/">Zip-NeRF</a>, who
+                borrowed from <a href="http://mgharbi.com/">Michaël Gharbi</a> and <a href="https://dorverbin.github.io/refnerf">Ref-NeRF</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
