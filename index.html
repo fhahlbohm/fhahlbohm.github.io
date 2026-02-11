@@ -2,505 +2,404 @@
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
     <title>Florian Hahlbohm</title>
-
     <meta name="author" content="Florian Hahlbohm">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="images/favicon/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="stylesheet.css">
-    
+    <link rel="stylesheet" type="text/css" href="main.css">
   </head>
-
   <body>
-    <table style="width:100%;max-width:800px;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-      <tr style="padding:0px">
-        <td style="padding:0px">
-          <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-            <tr style="padding:0px">
-              <td style="padding:2.5%;width:63%;vertical-align:middle">
-                <p class="name" style="text-align: center;">
-                  Florian Hahlbohm
-                </p>
-                <p>I'm a PhD student under the supervision of <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a> at the <a href="https://graphics.tu-bs.de">Computer Graphics Lab</a> of the TU Braunschweig.
-                </p>
-                <p style="text-align:center">
-                  <a href="mailto:hahlbohm@cg.cs.tu-bs.de">Email</a> &nbsp;/&nbsp;
-                  <a href="https://graphics.tu-bs.de/people/hahlbohm">Profile</a> &nbsp;/&nbsp;
-                  <a href="https://scholar.google.com/citations?user=SLiSrCsAAAAJ">Scholar</a> &nbsp;/&nbsp;
-                  <a href="https://twitter.com/fhahlbohm">Twitter</a> &nbsp;/&nbsp;
-                  <a href="https://bsky.app/profile/fhahlbohm.bsky.social">Bluesky</a> &nbsp;/&nbsp;
-                  <a href="https://github.com/fhahlbohm/">GitHub</a>
-                </p>
-              </td>
-              <td style="padding:2.5%;width:40%;max-width:40%">
-                <a href="images/flo_h.jpeg"><img style="width:100%;max-width:100%;object-fit: cover; border-radius: 50%;" alt="profile photo" src="images/flo_h.jpeg" class="hoverZoomLink"></a>
-              </td>
-            </tr>
-          </tbody></table>
-          <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-              <tr>
-              <td style="padding:20px;width:100%;vertical-align:middle">
-                <h2>Research</h2>
-                <p>
-                  My work is focused on advancing fast and accurate representations for reconstruction and view synthesis from images.
-                </p>
-              </td>
-            </tr>
-          </tbody></table>
-      <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-      <!-- Faster-GS -->
-      <tr onmouseout="fastergs_stop()" onmouseover="fastergs_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="fastergs_video" style="transition: opacity 0.4s">
-              <video  width=100% height=100% muted autoplay loop>
-                <source src="assets/fastergs_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video></div>
-            <img src="assets/fastergs_image.jpg" id="fastergs_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function fastergs_start() {
-              document.getElementById("fastergs_image").style.opacity = "0";
-              document.getElementById("fastergs_video").style.opacity = "1";
-            }
-
-            function fastergs_stop() {
-              document.getElementById("fastergs_video").style.opacity = "0";
-              document.getElementById("fastergs_image").style.opacity = "1";
-            }
-            fastergs_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">
-            <span class="papertitle">Faster-GS: Analyzing and Improving Gaussian Splatting Optimization</span>
-          </a>
-          <br>
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://lfranke.github.io/">Linus Franke</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>arXiv</em>, 2026
-          <br>
-          <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2602.09999">paper</a>
-          /
-          <a href="https://github.com/nerficg-project/faster-gaussian-splatting">code</a>
-          <p></p>
-          <p>
-            A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency.
-          </p>
-        </td>
-      </tr>
-      <!-- NVGS -->
-      <tr onmouseout="nvgs_stop()" onmouseover="nvgs_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <img src="assets/nvgs_image1.jpg" id="nvgs_image1" width="160" style="position: absolute; transition: opacity 1s">
-            <img src="assets/nvgs_image2.jpg" id="nvgs_image2" width="160">
-          </div>
-          <script type="text/javascript">
-            function nvgs_start() {
-              document.getElementById("nvgs_image1").style.opacity = "0";
-            }
-
-            function nvgs_stop() {
-              document.getElementById("nvgs_image1").style.opacity = "1";
-            }
-            nvgs_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://brent-zoomers.github.io/nvgs/">
-            <span class="papertitle">NVGS: Neural Visibility for Occlusion Culling in 3D Gaussian Splatting</span>
-          </a>
-          <br>
-          <a href="https://brent-zoomers.github.io/">Brent Zoomers</a>,
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://scholar.google.com/citations?user=z5LtNhIAAAAJ">Joni Vanherck</a>,
-          <a href="https://www.ljorissen.be/">Lode Jorissen</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
-          <a href="https://www.nickmichiels.net/">Nick Michiels</a>
-          <br>
-          <em>arXiv</em>, 2025
-          <br>
-          <a href="https://brent-zoomers.github.io/nvgs/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2511.19202">paper</a>
-          /
-          <a href="">code</a>
-          <p></p>
-          <p>
-            A method that combines neural visibility predictions for backface culling with instanced rendering of 3D Gaussian splats.
-          </p>
-        </td>
-      </tr>
-      <!-- INPC v2 -->
-      <tr onmouseout="inpc_v2_stop()" onmouseover="inpc_v2_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="inpc_v2_video" style="transition: opacity 0.4s">
-              <video  width=100% height=100% muted autoplay loop>
-                <source src="assets/inpc_v2_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video></div>
-            <img src="assets/inpc_v2_image.jpg" id="inpc_v2_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function inpc_v2_start() {
-              document.getElementById("inpc_v2_image").style.opacity = "0";
-              document.getElementById("inpc_v2_video").style.opacity = "1";
-            }
-
-            function inpc_v2_stop() {
-              document.getElementById("inpc_v2_video").style.opacity = "0";
-              document.getElementById("inpc_v2_image").style.opacity = "1";
-            }
-            inpc_v2_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://fhahlbohm.github.io/inpc_v2/">
-            <span class="papertitle">A Bag of Tricks for Efficient Implicit Neural Point Clouds</span>
-          </a>
-          <br>
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://lfranke.github.io/">Linus Franke</a>,
-          <a href="https://orcid.org/0009-0001-7756-6702">Leon Overkämping</a>,
-          <a href="https://orcid.org/0009-0007-2477-2725">Paula Wespe</a>,
-          <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>VMV</em>, 2025
-          <br>
-          <a href="https://fhahlbohm.github.io/inpc_v2/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2508.19140">paper</a>
-          /
-          <a href="">code</a>
-          <p></p>
-          <p>
-            Faster INPC training and rendering with less VRAM and better quality.
-          </p>
-        </td>
-      </tr>
-      <!-- SPaGS -->
-      <tr onmouseout="spags_stop()" onmouseover="spags_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="spags_video" style="transition: opacity 0.4s">
-              <video width=100% height=100% muted autoplay loop>
-                <source src="assets/spags_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video>
-            </div>
-            <img src="assets/spags_image.jpg" id="spags_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function spags_start() {
-              document.getElementById("spags_image").style.opacity = "0";
-              document.getElementById("spags_video").style.opacity = "1";
-            }
-
-            function spags_stop() {
-              document.getElementById("spags_video").style.opacity = "0";
-              document.getElementById("spags_image").style.opacity = "1";
-            }
-            spags_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://junboli-cn.github.io/spags/">
-            <span class="papertitle">SPaGS: Fast and Accurate 3D Gaussian Splatting for Spherical Panoramas</span>
-          </a>
-          <br>
-          <a href="https://www.cg.cs.tu-bs.de/people/li">Junbo Li</a>,
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://graphics.tu-bs.de/people/scholz-timon">Timon Scholz</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/tauscher">Jan-Philipp Tauscher</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>Eurographics Symposium on Rendering (Computer Graphics Forum)</em>, 2025
-          <br>
-          <a href="https://junboli-cn.github.io/spags/">project page</a>
-          /
-          <a href="https://diglib.eg.org/items/6d5e5a75-1517-4e17-822d-ef7477a2698b">paper</a>
-          /
-          <a href="https://github.com/nerficg-project/SPaGS">code</a>
-          <p></p>
-          <p>
-            A high-quality, real-time free-viewpoint rendering approach from 360° panoramic images.
-          </p>
-        </td>
-      </tr>
-      <!-- Splatshop -->
-      <tr onmouseout="splatshop_stop()" onmouseover="splatshop_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="splatshop_video" style="transition: opacity 0.4s">
-              <video width=100% height=100% muted autoplay loop>
-                <source src="assets/splatshop_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video>
-            </div>
-            <img src="assets/splatshop_image.jpg" id="splatshop_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function splatshop_start() {
-              document.getElementById("splatshop_image").style.opacity = "0";
-              document.getElementById("splatshop_video").style.opacity = "1";
-            }
-
-            function splatshop_stop() {
-              document.getElementById("splatshop_video").style.opacity = "0";
-              document.getElementById("splatshop_image").style.opacity = "1";
-            }
-            splatshop_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://github.com/m-schuetz/Splatshop">
-            <span class="papertitle">Splatshop: Efficiently Editing Large Gaussian Splat Models</span>
-          </a>
-          <br>
-          <a href="https://www.cg.tuwien.ac.at/staff/MarkusSch%C3%BCtz">Markus Schütz</a>,
-          <a href="https://momentsingraphics.de/About.html">Christoph Peters</a>,
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://graphics.tudelft.nl/~eisemann/">Elmar Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
-          <a href="https://www.cg.tuwien.ac.at/staff/MichaelWimmer">Michael Wimmer</a>
-          <br>
-          <em>High-Performance Graphics (Computer Graphics Forum)</em>, 2025
-          <br>
-          <a href="https://publications.graphics.tudelft.nl/papers/822">project page</a>
-          /
-          <a href="https://diglib.eg.org/items/5dbb09e2-5a8d-4d55-ac0f-c6e064737b0d">paper</a>
-          /
-          <a href="https://github.com/m-schuetz/Splatshop">code</a>
-          <p></p>
-          <p>
-            A highly optimized toolbox for interactive editing of 3D Gaussian splatting models on Desktop and in VR.
-          </p>
-        </td>
-      </tr>
-      <!-- HTGS -->
-      <tr onmouseout="htgs_stop()" onmouseover="htgs_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="htgs_video" style="transition: opacity 0.4s">
-              <video width=100% height=100% muted autoplay loop>
-                <source src="assets/htgs_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video>
-            </div>
-            <img src="assets/htgs_image.jpg" id="htgs_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function htgs_start() {
-              document.getElementById("htgs_image").style.opacity = "0";
-              document.getElementById("htgs_video").style.opacity = "1";
-            }
-
-            function htgs_stop() {
-              document.getElementById("htgs_video").style.opacity = "0";
-              document.getElementById("htgs_image").style.opacity = "1";
-            }
-            htgs_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://fhahlbohm.github.io/htgs/">
-            <span class="papertitle">Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency</span>
-          </a>
-          <br>
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://graphics.tu-bs.de/people/friederichs">Fabian Friederichs</a>,
-          <a href="https://reality.tf.fau.de/weyrich.html">Tim Weyrich</a>,
-          <a href="https://lfranke.github.io/">Linus Franke</a>,
-          <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
-          <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
-          <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>Eurographics (Computer Graphics Forum)</em>, 2025
-          <br>
-          <a href="https://fhahlbohm.github.io/htgs/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2410.08129">paper</a>
-          /
-          <a href="https://github.com/nerficg-project/HTGS">code</a>
-          <p></p>
-          <p>
-          A perspective-correct and view-consistent approach for 3D Gaussian splatting accelerated through hybrid transparency.
-          </p>
-        </td>
-      </tr>
-      <!-- D-NPC -->
-      <tr onmouseout="dnpc_stop()" onmouseover="dnpc_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="dnpc_video" style="transition: opacity 0.4s">
-              <video width=100% height=100% muted autoplay loop>
-                <source src="assets/dnpc_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video>
-            </div>
-            <img src="assets/dnpc_image.jpg" id="dnpc_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function dnpc_start() {
-              document.getElementById("dnpc_image").style.opacity = "0";
-              document.getElementById("dnpc_video").style.opacity = "1";
-            }
-
-            function dnpc_stop() {
-              document.getElementById("dnpc_video").style.opacity = "0";
-              document.getElementById("dnpc_image").style.opacity = "1";
-            }
-            dnpc_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://moritzkappel.github.io/projects/dnpc/">
-            <span class="papertitle">D-NPC: Dynamic Neural Point Clouds for Non-Rigid View Synthesis from Monocular Video</span>
-          </a>
-          <br>
-          <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://graphics.tu-bs.de/people/scholz-timon">Timon Scholz</a>,
-          <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
-          <a href="https://people.mpi-inf.mpg.de/~theobalt/">Christian Theobalt</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://people.mpi-inf.mpg.de/~golyanik/">Vladislav Golyanik</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>Eurographics (Computer Graphics Forum)</em>, 2025
-          <br>
-          <a href="https://moritzkappel.github.io/projects/dnpc/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2406.10078">paper</a>
-          /
-          <a href="https://www.youtube.com/watch?v=oO9in569dcc">video</a>
-          /
-          <a href="https://github.com/MoritzKappel/D-NPC">code</a>
-          <p></p>
-          <p>
-          Extending INPC to dynamic scenes enables fast, non-rigid view synthesis from monocular video.
-          </p>
-        </td>
-      </tr>
-      <!-- INPC -->
-      <tr onmouseout="inpc_stop()" onmouseover="inpc_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="inpc_video" style="transition: opacity 0.4s">
-              <video  width=100% height=100% muted autoplay loop>
-                <source src="assets/inpc_video.mp4" type="video/mp4">Your browser does not support the video tag.
-            </video></div>
-            <img src="assets/inpc_image.jpg" id="inpc_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function inpc_start() {
-              document.getElementById("inpc_image").style.opacity = "0";
-              document.getElementById("inpc_video").style.opacity = "1";
-            }
-
-            function inpc_stop() {
-              document.getElementById("inpc_video").style.opacity = "0";
-              document.getElementById("inpc_image").style.opacity = "1";
-            }
-            inpc_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://fhahlbohm.github.io/inpc/">
-            <span class="papertitle">INPC: Implicit Neural Point Clouds for Radiance Field Rendering</span>
-          </a>
-          <br>
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://lfranke.github.io/">Linus Franke</a>,
-          <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
-          <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>3DV</em>, 2025 (Oral)
-          <br>
-          <a href="https://fhahlbohm.github.io/inpc/">project page</a>
-          /
-          <a href="https://arxiv.org/abs/2403.16862">paper</a>
-          /
-          <a href="https://youtu.be/XnMlwvNb2-Q">video</a>
-          /
-          <a href="https://github.com/nerficg-project/INPC">code</a>
-          <p></p>
-          <p>
-          Representing a point cloud implicitly improves image quality for point-based radiance field methods.
-          </p>
-        </td>
-      </tr>
-      <!-- PlenopticPoints -->
-      <tr onmouseout="plenopticpoints_stop()" onmouseover="plenopticpoints_start()">
-        <td class="teaser-column">
-          <div class="one">
-            <div class="two" id="plenopticpoints_video" style="transition: opacity 0.4s">
-              <video  width=100% height=100% muted autoplay loop>
-                <source src="assets/plenopticpoints_video.mp4" type="video/mp4">Your browser does not support the video tag.
-              </video>
-            </div>
-            <img src="assets/plenopticpoints_image.jpg" id="plenopticpoints_image" width="160" style="transition: opacity 0.4s">
-          </div>
-          <script type="text/javascript">
-            function plenopticpoints_start() {
-              document.getElementById("plenopticpoints_image").style.opacity = "0";
-              document.getElementById("plenopticpoints_video").style.opacity = "1";
-            }
-
-            function plenopticpoints_stop() {
-              document.getElementById("plenopticpoints_video").style.opacity = "0";
-              document.getElementById("plenopticpoints_image").style.opacity = "1";
-            }
-            plenopticpoints_stop()
-          </script>
-        </td>
-        <td class="data-column">
-          <a href="https://graphics.tu-bs.de/publications/hahlbohm2023plenopticpoints">
-            <span class="papertitle">PlenopticPoints: Rasterizing Neural Feature Points for High-Quality Novel View Synthesis</span>
-          </a>
-          <br>
-          <strong>Florian Hahlbohm</strong>,
-          <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
-          <a href="https://graphics.tu-bs.de/people/tauscher">Jan-Philipp Tauscher</a>,
-          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
-          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
-          <br>
-          <em>VMV</em>, 2023
-          <br>
-          <a href="https://graphics.tu-bs.de/publications/hahlbohm2023plenopticpoints">project page</a>
-          /
-          <a href="https://diglib.eg.org/handle/10.2312/vmv20231226">paper</a>
-          <p></p>
-          <p>
-          Point-based representation for single-object scenes capturing reflections and fine detail with improved quality.
-          </p>
-        </td>
-      </tr>
-            
-          </tbody></table>
-          <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
-            <tr>
-              <td style="padding:0px">
-                <br>
-                <p style="text-align:right;font-size:small;">
-                  Thanks to <a href="https://lfranke.github.io/">Linus Franke</a> for showing me this awesome <a href="https://github.com/jonbarron/jonbarron_website">template</a> created by <a href="https://jonbarron.info/">Jon Barron</a>.
-                </p>
-              </td>
-            </tr>
-          </tbody></table>
-        </td>
-      </tr>
+    <table style="width:100%;max-width:800px;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;">
+      <tbody>
+        <tr style="padding:0px">
+          <td style="padding:0px">
+            <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;">
+              <tbody>
+                <tr style="padding:0px">
+                  <td style="padding:2.5%;width:63%;vertical-align:middle">
+                    <p class="name" style="text-align: center;">
+                      Florian Hahlbohm
+                    </p>
+                    <p>I'm a PhD student under the supervision of <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a> at the <a href="https://graphics.tu-bs.de">Computer Graphics Lab</a> of the TU Braunschweig.
+                    </p>
+                    <p style="text-align:center">
+                      <a href="mailto:hahlbohm@cg.cs.tu-bs.de">Email</a> &nbsp;/&nbsp;
+                      <a href="https://graphics.tu-bs.de/people/hahlbohm">Profile</a> &nbsp;/&nbsp;
+                      <a href="https://scholar.google.com/citations?user=SLiSrCsAAAAJ">Scholar</a> &nbsp;/&nbsp;
+                      <a href="https://twitter.com/fhahlbohm">Twitter</a> &nbsp;/&nbsp;
+                      <a href="https://bsky.app/profile/fhahlbohm.bsky.social">Bluesky</a> &nbsp;/&nbsp;
+                      <a href="https://github.com/fhahlbohm/">GitHub</a>
+                    </p>
+                  </td>
+                  <td style="padding:2.5%;width:37%;max-width:37%">
+                    <a href="images/flo_h.jpeg"><img style="width:100%;max-width:100%;object-fit: cover; border-radius: 50%;" alt="profile photo" src="images/flo_h.jpeg" class="hoverZoomLink"></a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;">
+              <tbody>
+                <tr>
+                  <td style="padding:16px;width:100%;vertical-align:middle">
+                    <h2>Research</h2>
+                    <p>
+                      My work is focused on advancing fast and accurate representations for reconstruction and view synthesis from images.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table style="width:100%;border:0px;border-spacing:0px 10px;border-collapse:separate;margin-right:auto;margin-left:auto;">
+              <tbody>
+                <!-- Faster-GS -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video  width=100% height=100% muted autoplay loop>
+                          <source src="assets/fastergs_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video></div>
+                      <img src="assets/fastergs_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">
+                      <span class="papertitle">Faster-GS: Analyzing and Improving Gaussian Splatting Optimization</span>
+                    </a>
+                    <br>
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://lfranke.github.io/">Linus Franke</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>arXiv</em>, 2026
+                    <br>
+                    <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2602.09999">paper</a>
+                    /
+                    <a href="https://github.com/nerficg-project/faster-gaussian-splatting">code</a>
+                    <p></p>
+                    <p>
+                      A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency.
+                    </p>
+                  </td>
+                </tr>
+                <!-- NVGS -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <img class="img-one" src="assets/nvgs_image1.jpg" width="160">
+                      <img class="img-two" src="assets/nvgs_image2.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://brent-zoomers.github.io/nvgs/">
+                      <span class="papertitle">NVGS: Neural Visibility for Occlusion Culling in 3D Gaussian Splatting</span>
+                    </a>
+                    <br>
+                    <a href="https://brent-zoomers.github.io/">Brent Zoomers</a>,
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://scholar.google.com/citations?user=z5LtNhIAAAAJ">Joni Vanherck</a>,
+                    <a href="https://www.ljorissen.be/">Lode Jorissen</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
+                    <a href="https://www.nickmichiels.net/">Nick Michiels</a>
+                    <br>
+                    <em>arXiv</em>, 2025
+                    <br>
+                    <a href="https://brent-zoomers.github.io/nvgs/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2511.19202">paper</a>
+                    /
+                    <a href="">code</a>
+                    <p></p>
+                    <p>
+                      A method that combines neural visibility predictions for backface culling with instanced rendering of 3D Gaussian splats.
+                    </p>
+                  </td>
+                </tr>
+                <!-- INPC v2 -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video  width=100% height=100% muted autoplay loop>
+                          <source src="assets/inpc_v2_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video></div>
+                      <img src="assets/inpc_v2_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://fhahlbohm.github.io/inpc_v2/">
+                      <span class="papertitle">A Bag of Tricks for Efficient Implicit Neural Point Clouds</span>
+                    </a>
+                    <br>
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://lfranke.github.io/">Linus Franke</a>,
+                    <a href="https://orcid.org/0009-0001-7756-6702">Leon Overkämping</a>,
+                    <a href="https://orcid.org/0009-0007-2477-2725">Paula Wespe</a>,
+                    <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>VMV</em>, 2025
+                    <br>
+                    <a href="https://fhahlbohm.github.io/inpc_v2/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2508.19140">paper</a>
+                    /
+                    <a href="">code</a>
+                    <p></p>
+                    <p>
+                      Faster INPC training and rendering with less VRAM and better quality.
+                    </p>
+                  </td>
+                </tr>
+                <!-- SPaGS -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video width=100% height=100% muted autoplay loop>
+                          <source src="assets/spags_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <img src="assets/spags_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://junboli-cn.github.io/spags/">
+                      <span class="papertitle">SPaGS: Fast and Accurate 3D Gaussian Splatting for Spherical Panoramas</span>
+                    </a>
+                    <br>
+                    <a href="https://www.cg.cs.tu-bs.de/people/li">Junbo Li</a>,
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://graphics.tu-bs.de/people/scholz-timon">Timon Scholz</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/tauscher">Jan-Philipp Tauscher</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>Eurographics Symposium on Rendering (Computer Graphics Forum)</em>, 2025
+                    <br>
+                    <a href="https://junboli-cn.github.io/spags/">project page</a>
+                    /
+                    <a href="https://diglib.eg.org/items/6d5e5a75-1517-4e17-822d-ef7477a2698b">paper</a>
+                    /
+                    <a href="https://github.com/nerficg-project/SPaGS">code</a>
+                    <p></p>
+                    <p>
+                      A high-quality, real-time free-viewpoint rendering approach from 360° panoramic images.
+                    </p>
+                  </td>
+                </tr>
+                <!-- Splatshop -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video width=100% height=100% muted autoplay loop>
+                          <source src="assets/splatshop_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <img src="assets/splatshop_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://github.com/m-schuetz/Splatshop">
+                      <span class="papertitle">Splatshop: Efficiently Editing Large Gaussian Splat Models</span>
+                    </a>
+                    <br>
+                    <a href="https://www.cg.tuwien.ac.at/staff/MarkusSch%C3%BCtz">Markus Schütz</a>,
+                    <a href="https://momentsingraphics.de/About.html">Christoph Peters</a>,
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://graphics.tudelft.nl/~eisemann/">Elmar Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>,
+                    <a href="https://www.cg.tuwien.ac.at/staff/MichaelWimmer">Michael Wimmer</a>
+                    <br>
+                    <em>High-Performance Graphics (Computer Graphics Forum)</em>, 2025
+                    <br>
+                    <a href="https://publications.graphics.tudelft.nl/papers/822">project page</a>
+                    /
+                    <a href="https://diglib.eg.org/items/5dbb09e2-5a8d-4d55-ac0f-c6e064737b0d">paper</a>
+                    /
+                    <a href="https://github.com/m-schuetz/Splatshop">code</a>
+                    <p></p>
+                    <p>
+                      A highly optimized toolbox for interactive editing of 3D Gaussian splatting models on Desktop and in VR.
+                    </p>
+                  </td>
+                </tr>
+                <!-- HTGS -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video width=100% height=100% muted autoplay loop>
+                          <source src="assets/htgs_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <img src="assets/htgs_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://fhahlbohm.github.io/htgs/">
+                      <span class="papertitle">Efficient Perspective-Correct 3D Gaussian Splatting Using Hybrid Transparency</span>
+                    </a>
+                    <br>
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://graphics.tu-bs.de/people/friederichs">Fabian Friederichs</a>,
+                    <a href="https://reality.tf.fau.de/weyrich.html">Tim Weyrich</a>,
+                    <a href="https://lfranke.github.io/">Linus Franke</a>,
+                    <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
+                    <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
+                    <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>Eurographics (Computer Graphics Forum)</em>, 2025
+                    <br>
+                    <a href="https://fhahlbohm.github.io/htgs/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2410.08129">paper</a>
+                    /
+                    <a href="https://github.com/nerficg-project/HTGS">code</a>
+                    <p></p>
+                    <p>
+                    A perspective-correct and view-consistent approach for 3D Gaussian splatting accelerated through hybrid transparency.
+                    </p>
+                  </td>
+                </tr>
+                <!-- D-NPC -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video width=100% height=100% muted autoplay loop>
+                          <source src="assets/dnpc_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <img src="assets/dnpc_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://moritzkappel.github.io/projects/dnpc/">
+                      <span class="papertitle">D-NPC: Dynamic Neural Point Clouds for Non-Rigid View Synthesis from Monocular Video</span>
+                    </a>
+                    <br>
+                    <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://graphics.tu-bs.de/people/scholz-timon">Timon Scholz</a>,
+                    <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
+                    <a href="https://people.mpi-inf.mpg.de/~theobalt/">Christian Theobalt</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://people.mpi-inf.mpg.de/~golyanik/">Vladislav Golyanik</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>Eurographics (Computer Graphics Forum)</em>, 2025
+                    <br>
+                    <a href="https://moritzkappel.github.io/projects/dnpc/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2406.10078">paper</a>
+                    /
+                    <a href="https://www.youtube.com/watch?v=oO9in569dcc">video</a>
+                    /
+                    <a href="https://github.com/MoritzKappel/D-NPC">code</a>
+                    <p></p>
+                    <p>
+                    Extending INPC to dynamic scenes enables fast, non-rigid view synthesis from monocular video.
+                    </p>
+                  </td>
+                </tr>
+                <!-- INPC -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video  width=100% height=100% muted autoplay loop>
+                          <source src="assets/inpc_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                      </video></div>
+                      <img src="assets/inpc_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://fhahlbohm.github.io/inpc/">
+                      <span class="papertitle">INPC: Implicit Neural Point Clouds for Radiance Field Rendering</span>
+                    </a>
+                    <br>
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://lfranke.github.io/">Linus Franke</a>,
+                    <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
+                    <a href="https://graphics.tu-bs.de/people/castillo">Susana Castillo</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://www.lgdv.tf.fau.de/person/marc-stamminger/">Marc Stamminger</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>3DV</em>, 2025 (Oral)
+                    <br>
+                    <a href="https://fhahlbohm.github.io/inpc/">project page</a>
+                    /
+                    <a href="https://arxiv.org/abs/2403.16862">paper</a>
+                    /
+                    <a href="https://youtu.be/XnMlwvNb2-Q">video</a>
+                    /
+                    <a href="https://github.com/nerficg-project/INPC">code</a>
+                    <p></p>
+                    <p>
+                    Representing a point cloud implicitly improves image quality for point-based radiance field methods.
+                    </p>
+                  </td>
+                </tr>
+                <!-- PlenopticPoints -->
+                <tr class="paper-row">
+                  <td class="teaser-column">
+                    <div class="one">
+                      <div class="two">
+                        <video  width=100% height=100% muted autoplay loop>
+                          <source src="assets/plenopticpoints_video.mp4" type="video/mp4">Your browser does not support the video tag.
+                        </video>
+                      </div>
+                      <img src="assets/plenopticpoints_image.jpg" width="160">
+                    </div>
+                  </td>
+                  <td class="data-column">
+                    <a href="https://graphics.tu-bs.de/publications/hahlbohm2023plenopticpoints">
+                      <span class="papertitle">PlenopticPoints: Rasterizing Neural Feature Points for High-Quality Novel View Synthesis</span>
+                    </a>
+                    <br>
+                    <strong>Florian Hahlbohm</strong>,
+                    <a href="https://moritzkappel.github.io/">Moritz Kappel</a>,
+                    <a href="https://graphics.tu-bs.de/people/tauscher">Jan-Philipp Tauscher</a>,
+                    <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+                    <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+                    <br>
+                    <em>VMV</em>, 2023
+                    <br>
+                    <a href="https://graphics.tu-bs.de/publications/hahlbohm2023plenopticpoints">project page</a>
+                    /
+                    <a href="https://diglib.eg.org/handle/10.2312/vmv20231226">paper</a>
+                    <p></p>
+                    <p>
+                    Point-based representation for single-object scenes capturing reflections and fine detail with improved quality.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;">
+              <tbody>
+                <tr>
+                  <td style="padding:0px">
+                    <br>
+                    <p style="text-align:right;font-size:small;">
+                      Thanks to <a href="https://lfranke.github.io/">Linus Franke</a> for showing me this awesome <a href="https://github.com/jonbarron/jonbarron_website">template</a> created by <a href="https://jonbarron.info/">Jon Barron</a>.
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </body>
 </html>
