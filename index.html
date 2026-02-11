@@ -402,4 +402,11 @@
       </tbody>
     </table>
   </body>
+  <script type="text/javascript">
+    for (let el of document.getElementsByClassName('two')) {
+      el.addEventListener('transitionstart', function() {
+        parseFloat(window.getComputedStyle(this).opacity) < 0.1 ? this.children[0].currentTime = 0.0 : null;
+      });
+    }
+  </script>
 </html>
