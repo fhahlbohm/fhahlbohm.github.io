@@ -49,6 +49,52 @@
             </tr>
           </tbody></table>
       <table style="width:100%;border:0px;border-spacing:0px;border-collapse:separate;margin-right:auto;margin-left:auto;"><tbody>
+      <!-- Faster-GS -->
+      <tr onmouseout="fastergs_stop()" onmouseover="fastergs_start()">
+        <td style="padding:20px;width:25%;vertical-align:middle">
+          <div class="one">
+            <div class="two" id="fastergs_video" style="transition: opacity 0.4s">
+              <video  width=100% height=100% muted autoplay loop>
+                <source src="assets/fastergs_video.mp4" type="video/mp4">Your browser does not support the video tag.
+              </video></div>
+            <img src="assets/fastergs_image.jpg" id="fastergs_image" width="160" style="transition: opacity 0.4s">
+          </div>
+          <script type="text/javascript">
+            function fastergs_start() {
+              document.getElementById("fastergs_image").style.opacity = "0";
+              document.getElementById("fastergs_video").style.opacity = "1";
+            }
+
+            function fastergs_stop() {
+              document.getElementById("fastergs_video").style.opacity = "0";
+              document.getElementById("fastergs_image").style.opacity = "1";
+            }
+            fastergs_stop()
+          </script>
+        </td>
+        <td style="padding:20px;width:75%;vertical-align:middle">
+          <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">
+            <span class="papertitle">Faster-GS: Analyzing and Improving Gaussian Splatting Optimization</span>
+          </a>
+          <br>
+          <strong>Florian Hahlbohm</strong>,
+          <a href="https://lfranke.github.io/">Linus Franke</a>,
+          <a href="https://graphics.tu-bs.de/people/eisemann">Martin Eisemann</a>,
+          <a href="https://graphics.tu-bs.de/people/magnor">Marcus Magnor</a>
+          <br>
+          <em>arXiv</em>, 2026
+          <br>
+          <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">project page</a>
+          /
+          <a href="https://arxiv.org/abs/2602.09999">paper</a>
+          /
+          <a href="https://github.com/nerficg-project/faster-gaussian-splatting">code</a>
+          <p></p>
+          <p>
+            A research-friendly Gaussian Splatting framework that integrates and extends existing ideas for significantly improved efficiency.
+          </p>
+        </td>
+      </tr>
       <!-- NVGS -->
       <tr onmouseout="nvgs_stop()" onmouseover="nvgs_start()">
         <td style="padding:20px;width:25%;vertical-align:middle">
