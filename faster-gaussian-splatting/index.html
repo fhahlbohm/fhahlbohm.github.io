@@ -62,6 +62,7 @@
                 <li><a href="assets/hahlbohm2026fastergs.pdf"><img src="assets/fastergs_paper.avif" height="60px"><h4><strong>Paper</strong></h4></a></li>
                 <li><a href="https://arxiv.org/abs/2602.09999"><img src="assets/arxiv.png" height="60px"><h4><strong>arXiv</strong></h4></a></li>
                 <li><a href="https://github.com/nerficg-project/faster-gaussian-splatting"><img src="assets/github.png" height="60px"><h4><strong>Code</strong></h4></a></li>
+                <li><a href="https://github.com/fhahlbohm/gaussian-splatting"><img src="assets/github.png" height="60px"><h4><strong>Inria Fork</strong></h4></a></li>
             </ul>
         </div>
     </div>
@@ -72,7 +73,31 @@
                 <source src="assets/fastergs_teaser_720p30.mp4" type="video/mp4"/>
             </video>
             <h3 class="text-success"><b>TL;DR: An efficient and research-friendly Gaussian Splatting framework.</b></h3>
-            <p><b>Find more details on our <a href="https://github.com/nerficg-project/faster-gaussian-splatting">GitHub</a>!</b></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3>Q: How can I use it?</h3>
+            <hr>
+            <div class="row text-center">
+                <div class="col-md-6">
+                    <h4>Option A: Our Full Implementation</h4>
+                    <p>
+                        Use our native, NeRFICG-based version for maximum performance, additional features, and a
+                        clean, extensible PyTorch + CUDA design.
+                    </p>
+                    <a class="btn btn-success" href="https://github.com/nerficg-project/faster-gaussian-splatting" role="button">View Repository</a>
+                </div>
+                <div class="col-md-6">
+                    <h4>Option B: Integration Into Existing 3DGS Code</h4>
+                    <p>
+                        Add our CUDA backend to your existing 3D Gaussian Splatting pipeline with minimal code changes.
+                        We did this for the Inria 3DGS codebase.
+                    </p>
+                    <a class="btn btn-success" href="https://github.com/fhahlbohm/gaussian-splatting" role="button">Inria Fork</a>
+                </div>
+            </div>
         </div>
     </div>
 
