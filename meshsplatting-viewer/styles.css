@@ -1,0 +1,192 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #0d0d0f;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+canvas {
+    display: block;
+}
+/* The `hidden` attribute must win over the `display: flex` rules below. */
+[hidden] {
+    display: none !important;
+}
+#info {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    font-size: 12px;
+    color: #ffffff;
+    background: rgba(20, 20, 24, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+}
+#info-stats {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 18px;
+    row-gap: 4px;
+}
+.stat-label {
+    color: #ffffff;
+}
+.stat-value {
+    color: #ffffff;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+#fps {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+}
+#back {
+    font: inherit;
+    font-size: 12px;
+    text-align: center;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+#back:hover {
+    border-color: #4ea1ff;
+    color: #4ea1ff;
+}
+/* Landing gallery overlay */
+#gallery {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 48px 24px;
+    box-sizing: border-box;
+    overflow: auto;
+    color: #8a8f9a;
+    transition: background 0.15s ease;
+}
+#gallery.hidden {
+    display: none;
+}
+#gallery.dragging {
+    background: rgba(78, 161, 255, 0.06);
+}
+#gallery-title {
+    font-size: 18px;
+    color: #cfd2da;
+}
+#gallery-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 100%;
+    max-width: 960px;
+}
+.gallery-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 960px;
+}
+.section-title {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: #8a8f9a;
+}
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    width: 100%;
+}
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 120px;
+    padding: 24px;
+    font: inherit;
+    color: #cfd2da;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.card:hover {
+    border-color: #4ea1ff;
+    background: rgba(78, 161, 255, 0.08);
+    transform: translateY(-2px);
+}
+.card-title {
+    font-size: 16px;
+}
+.card-sub {
+    font-size: 12px;
+    color: #8a8f9a;
+}
+#drop-card {
+    grid-column: 1 / -1;
+    border-style: dashed;
+    color: #8a8f9a;
+}
+#drop-card code {
+    color: #cfd2da;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 6px;
+    border-radius: 5px;
+}
+#gallery.dragging #drop-card {
+    border-color: #4ea1ff;
+    color: #4ea1ff;
+    transform: scale(1.02);
+}
+/* Absolutely positioned so toggling it never reflows the centered gallery grid. */
+#loading {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 240px;
+}
+#progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+#progress-fill {
+    width: 0;
+    height: 100%;
+    background: #4ea1ff;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}
+#progress-label {
+    font-size: 13px;
+    color: #cfd2da;
+}

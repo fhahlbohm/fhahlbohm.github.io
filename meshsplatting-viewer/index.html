@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MeshSplatting Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="info" hidden>
+        <button id="back" type="button">← Gallery</button>
+        <div id="info-stats"></div>
+        <span id="fps"></span>
+    </div>
+    <div id="gallery">
+        <div id="gallery-title">MeshSplatting Viewer</div>
+        <div id="gallery-sections"></div>
+        <div class="gallery-section">
+            <div class="section-title">Your Own Model</div>
+            <div class="gallery-grid">
+                <button id="drop-card" class="card" type="button">
+                    <div class="card-title">Drop a file</div>
+                    <div class="card-sub"><code>.msplat</code></div>
+                </button>
+            </div>
+        </div>
+        <div id="loading" hidden>
+            <div id="progress-bar"><div id="progress-fill"></div></div>
+            <div id="progress-label">0%</div>
+        </div>
+    </div>
+    <canvas id="canvas">
+    </canvas>
+
+<script type="importmap">
+    { "imports": { "three": "https://unpkg.com/three@0.177.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.177.0/examples/jsm/" } }
+</script>
+<script type="module" src="main.js"></script>
+</body>
+
+</html>

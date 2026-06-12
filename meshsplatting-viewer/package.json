@@ -1,0 +1,13 @@
+{
+  "name": "msplat-threejs",
+  "version": "1.0.0",
+  "description": "WebGL/Three.js viewer for MeshSplatting (.msplat) scenes",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "dependencies": {
+    "three": "^0.182.0"
+  }
+}
