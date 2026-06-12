@@ -1,13 +1,13 @@
 {
   "models": [
-    { "name": "Bicycle", "group": "Mip-NeRF 360 Outdoor", "url": "https://github.com/fhahlbohm/fhahlbohm.github.io/releases/download/meshsplatting-models-v1/bicycle.msplat" },
-    { "name": "Flowers", "group": "Mip-NeRF 360 Outdoor", "url": "https://github.com/fhahlbohm/fhahlbohm.github.io/releases/download/meshsplatting-models-v1/flowers.msplat" },
-    { "name": "Garden", "group": "Mip-NeRF 360 Outdoor", "url": "https://github.com/fhahlbohm/fhahlbohm.github.io/releases/download/meshsplatting-models-v1/garden.msplat" },
-    { "name": "Stump", "group": "Mip-NeRF 360 Outdoor", "url": "https://github.com/fhahlbohm/fhahlbohm.github.io/releases/download/meshsplatting-models-v1/stump.msplat" },
-    { "name": "Treehill", "group": "Mip-NeRF 360 Outdoor", "url": "https://github.com/fhahlbohm/fhahlbohm.github.io/releases/download/meshsplatting-models-v1/treehill.msplat" },
+    { "name": "Bicycle", "group": "Mip-NeRF 360 Outdoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/bicycle.msplat" },
+    { "name": "Flowers", "group": "Mip-NeRF 360 Outdoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/flowers.msplat" },
+    { "name": "Garden", "group": "Mip-NeRF 360 Outdoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/garden.msplat" },
+    { "name": "Stump", "group": "Mip-NeRF 360 Outdoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/stump.msplat" },
+    { "name": "Treehill", "group": "Mip-NeRF 360 Outdoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/treehill.msplat" },
     { "name": "Bonsai", "group": "Mip-NeRF 360 Indoor", "url": "./models/bonsai.msplat" },
     { "name": "Counter", "group": "Mip-NeRF 360 Indoor", "url": "./models/counter.msplat" },
     { "name": "Kitchen", "group": "Mip-NeRF 360 Indoor", "url": "./models/kitchen.msplat" },
-    { "name": "Room", "group": "Mip-NeRF 360 Indoor", "url": "./models/room.msplat" }
+    { "name": "Room", "group": "Mip-NeRF 360 Indoor", "url": "https://huggingface.co/datasets/fhahlbohm/meshsplatting-models/resolve/main/room.msplat" }
   ]
 }
