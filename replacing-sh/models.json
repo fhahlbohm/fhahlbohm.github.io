@@ -1,0 +1,17 @@
+{
+    "models": [
+        { "name": "Bicycle", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/bicycle.ngsplat" },
+        { "name": "Bonsai", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/bonsai.ngsplat" },
+        { "name": "Counter", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/counter.ngsplat" },
+        { "name": "Flowers", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/flowers.ngsplat" },
+        { "name": "Garden", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/garden.ngsplat" },
+        { "name": "Kitchen", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/kitchen.ngsplat" },
+        { "name": "Room", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/room.ngsplat" },
+        { "name": "Stump", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/stump.ngsplat" },
+        { "name": "Treehill", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/treehill.ngsplat" },
+        { "name": "Train", "group": "Tanks and Temples", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/train.ngsplat" },
+        { "name": "Truck", "group": "Tanks and Temples", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/truck.ngsplat" },
+        {"name": "Dr Johnson", "group": "Deep Blending", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/drjohnson.ngsplat" },
+        {"name": "Playroom", "group": "Deep Blending", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/playroom.ngsplat" }
+    ]
+}
