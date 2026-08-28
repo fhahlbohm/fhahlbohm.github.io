@@ -114,3 +114,25 @@ canvas {
 }
 canvas { cursor: grab; }
 canvas:active { cursor: grabbing; }
+#appearance-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #8a8f9a;
+}
+#appearance-select {
+    font: inherit;
+    color: #cfd2da;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+#appearance-select:hover {
+    border-color: #4ea1ff;
+}
+#appearance-select option {
+    background: #0d0d0f;
+}

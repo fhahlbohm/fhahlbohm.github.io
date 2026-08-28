@@ -1,5 +1,8 @@
 {
     "models": [
+        { "name": "Bicycle", "group": "Benchmark", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/benchmark/bicycle.ngsplat" },
+        { "name": "Stump", "group": "Benchmark", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/benchmark/stump.ngsplat" },
+        { "name": "Bonsai", "group": "Benchmark", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/benchmark/bonsai.ngsplat" },
         { "name": "Bicycle", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/bicycle.ngsplat" },
         { "name": "Bonsai", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/bonsai.ngsplat" },
         { "name": "Counter", "group": "Mip-NeRF 360", "url": "https://huggingface.co/datasets/fhahlbohm/ngsplat/resolve/main/counter.ngsplat" },

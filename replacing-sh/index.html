@@ -13,6 +13,17 @@
 
     <div id="gallery">
         <div id="gallery-title">3DGS with a neural appearance model</div>
+        <div id="appearance-row">
+            <label for="appearance-select">Appearance model</label>
+            <select id="appearance-select">
+                <option value="auto" selected>auto (from file)</option>
+                <option value="sh">SH</option>
+                <option value="sv">SV</option>
+                <option value="nasg">NASG</option>
+                <option value="nasgabor">NASGabor</option>
+                <option value="neural">Neural</option>
+            </select>
+        </div>
         <div id="gallery-sections"></div>
         <div id="loading" hidden>
             <div id="progress-bar"><div id="progress-fill"></div></div>

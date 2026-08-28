@@ -3,24 +3,30 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import GUI from "lil-gui";
 import {
     fetchFile, loadNgsplat, chooseModel, readUrlWithProgress,
-    captureDefines, mlpInputDim, COLOR_ACTIVATION_NAMES, RESIDUAL_ACTIVATION_NAMES,
+    captureDefines, mlpInputDim, APPEARANCE_MODELS, APPEARANCE_NAMES,
+    COLOR_ACTIVATION_NAMES, RESIDUAL_ACTIVATION_NAMES,
     buildMlpLayers, referenceCaptureColor, halfToFloat,
+    applyAppearanceOverride,
 } from "./utils.js";
 import { createSplatSorter } from "./sorter.js";
 
-// ngsplat-viewer — a Three.js viewer for neural-appearance Gaussian splatting
-// exports (.ngsplat): standard 3DGS EWA splatting with CPU-sorted alpha
-// blending, where the per-splat view-dependent color is
-//   color_activation(base + residual_activation(MLP(features, sh(dir))))
-// (small shared residual MLP, ReLU, no biases, fp16 weights). The MLP runs in a
-// capture pass — a fragment shader over one texel per splat, re-run only when
-// the camera moves — and the splat pass reads the cached color. The file also
-// carries the test-set viewpoints of the training scene; the Benchmark button
-// times each of them at a fixed viewport (default 10 renders per view at
-// 1280x720 — resolution, render count, and whether sorting is timed are
-// adjustable in the "Benchmark" GUI folder; native intrinsics are kept, so 720p
-// matches the reference benchmark) with both the MLP and a standard degree-3 SH
-// evaluation. See README.md.
+// ngsplat-viewer — a Three.js viewer for Gaussian splatting exports
+// (.ngsplat): standard 3DGS EWA splatting with CPU-sorted alpha blending,
+// where the per-splat view-dependent color is
+//   color_activation(base + residual(dir))
+// with the residual coming from one of five appearance models: quantized
+// spherical harmonics (SH), a soft spherical Voronoi partition of the
+// direction sphere (SV), anisotropic spherical Gaussian lobes with or without
+// a Gabor term (NASG / NASGabor), or a small shared residual MLP over
+// per-splat features (Neural). The residual runs in a capture pass — a
+// fragment shader over one texel per splat, re-run only when the camera
+// moves — and the splat
+// pass reads the cached color. The file also carries the test-set viewpoints
+// of the training scene; the Benchmark button times each of them at a fixed
+// viewport (default 10 renders per view at 1280x720 — resolution, render
+// count, and whether sorting is timed are adjustable in the "Benchmark" GUI
+// folder; native intrinsics are kept, so 720p matches the reference
+// benchmark). See README.md.
 
 const NEAR = 0.2, FAR = 1000.0;
 
@@ -45,11 +51,11 @@ const state = {
     shading: "full",
     sigma: 3.329,          // cutoff in std-devs; minAlpha = exp(-sigma^2/2). 3.329 -> 1/255
     renderBase: true,      // off = |full - base-only| visualization
-    renderResidual: true,  // off = base color only (mlp skipped)
+    renderResidual: true,  // off = base color only (residual eval skipped)
     scaleModifier: 1.0,    // global gaussian scale multiplier
     highRes: false,        // false: half native DPR on high-DPI; true: native capped at 2
     testView: -1,          // baked test-set viewpoint index (-1 = free camera)
-    // MLP capture pass stage: fragment (default) or vertex (fallback for drivers
+    // Capture pass stage: fragment (default) or vertex (fallback for drivers
     // with broken fragment-stage integer fetches). Decided by the startup probe.
     mlpMode: "capture-fragment",
     // MLP weight backing: "uniform" (vec4 uniform array, no per-splat texture
@@ -61,15 +67,6 @@ const state = {
     // mobile) or "fp32". Desktop drivers run mediump as fp32, so it only
     // differs on mobile.
     precision: "fp16",
-    // Capture-pass color evaluation. "mlp" is the real thing (the neural
-    // appearance model's residual MLP); "sh" is a standard degree-3 SH proxy
-    // with placeholder coefficients — meaningless image, representative
-    // data-independent timing.
-    // Both run in the capture pass, sharing the 1 eval/splat/camera-move
-    // amortization. Toggled interactively by the "Show SH proxy" checkbox
-    // (shProxy mirrors it for the GUI) and per pass by the Neural-vs-SH benchmark.
-    evalMode: "mlp",
-    shProxy: false,
 };
 
 // Bottom-centered overlay stack shared by the benchmark panel and the error
@@ -164,54 +161,84 @@ async function main() {
     loading.hidden = true;
     gallery.classList.add("hidden");
 
+    // Gallery "Appearance model" selector (?appearance= for direct links): a
+    // file not carrying the selected model gets dummy residual parameters
+    // from dummy_params.json, so any model can be benchmarked on the same
+    // gaussians; "auto" (the default) loads the file as-is.
+    const appearanceParam = params.get("appearance");
+    const wantedAppearance = APPEARANCE_MODELS.includes(appearanceParam)
+        ? appearanceParam
+        : document.getElementById("appearance-select")?.value ?? "auto";
+    if (wantedAppearance !== "auto")
+        model = applyAppearanceOverride(model, wantedAppearance,
+            await fetchFile("./dummy_params.json", "json"));
+
     const { numSplats, textureWidth, textureHeight } = model;
     // Verification hooks: ?residual=0 / ?base=0 preset the capture toggles.
     const urlParams = params;
     if (urlParams.get("residual") === "0") state.renderResidual = false;
     if (urlParams.get("base") === "0") state.renderBase = false;
     state.shading = !state.renderResidual ? "base" : (!state.renderBase ? "residual" : "full");
-    const rawFeatures = model.nFrequencies
-        ? model.featureDim / (2 * model.nFrequencies) : model.featureDim;
-    const nIn = mlpInputDim(model);
+    const isNeural = model.appearance === "neural";
+    const modelName = APPEARANCE_NAMES[model.appearance]
+        + (model.dummyParams ? " (dummy params)" : "");
+    const bytesPerSplat = 16 + 4 * model.paramTexData.reduce((s, t) => s + t.components, 0);
     const sceneInfo = {
+        appearance: modelName,
         splats: numSplats.toLocaleString(),
-        fileSize: `${(model.fileBytes / 1024 / 1024).toFixed(1)} MB `
-            + `(${16 + 16 * model.mlpTexData.length} B/splat)`,
+        fileSize: `${(model.fileBytes / 1024 / 1024).toFixed(1)} MB (${bytesPerSplat} B/splat)`,
         antialiasing: model.properAA ? "on" : "off",
         baseRange: `[${model.baseOffset.toFixed(2)}, `
             + `${(model.baseOffset + 255 * model.baseScale).toFixed(2)}]`,
-        features: model.nFrequencies
-            ? `${rawFeatures} × freq(${model.nFrequencies}) → ${model.featureDim}`
-            : `${model.featureDim}`,
-        degrees: [...(model.sh0Input ? [0] : []), ...model.degrees].join(", "),
-        // baked: the view-independent inputs (encoded features + the SH_C0
-        // constant) are pre-multiplied into a per-splat h0_static cache, so the
-        // shader evaluates only the view-direction columns (padded to a multiple
-        // of 4); legacy files carry the encoded features and the full matrix
-        layer0: model.baked
-            ? `baked (${model.featureDim + (model.sh0Input ? 1 : 0)} of ${nIn} inputs pre-multiplied)`
-            : "full input",
-        inputs: String(nIn),
-        hiddenLayers: String(model.nHiddenLayers),
-        neurons: String(model.nNeurons),
-        // effective (unpadded) weight count: the file stores the output layer
-        // already trimmed to 3 rows and rejects padded input widths
-        weights: (
-            nIn * model.nNeurons
-            + (model.nHiddenLayers - 1) * model.nNeurons * model.nNeurons
-            + 3 * model.nNeurons
-        ).toLocaleString(),
-        mlpActivation: "relu", // structurally fixed by the reference implementation
+        baseActivation: model.baseExp ? "exp" : "none",
         colorActivation: COLOR_ACTIVATION_NAMES[model.colorActivation],
-        residualActivation: model.colorActivation === 3
-            ? "softplus (β10, additive)" : RESIDUAL_ACTIVATION_NAMES[model.residualActivation],
+        // for sv/nasg/nasgabor the residual activation is pre-applied at export
+        residualActivation: RESIDUAL_ACTIVATION_NAMES[model.residualActivation]
+            + (["sv", "nasg", "nasgabor"].includes(model.appearance) ? " (baked)" : ""),
         testViews: String(model.testCameras.length),
     };
+    if (model.appearance === "sh") {
+        sceneInfo.degrees = model.degrees.join(", ");
+        sceneInfo.coefficients = `${3 * model.degrees.reduce((s, l) => s + 2 * l + 1, 0)} `
+            + `(7/8/6-bit quantized)`;
+    } else if (model.appearance === "sv") {
+        sceneInfo.sites = String(model.nSites);
+    } else if (model.appearance === "nasg" || model.appearance === "nasgabor") {
+        sceneInfo.lobes = String(model.nLobes);
+    } else {  // neural
+        const rawFeatures = model.nFrequencies
+            ? model.featureDim / (2 * model.nFrequencies) : model.featureDim;
+        const nIn = mlpInputDim(model);
+        Object.assign(sceneInfo, {
+            features: model.nFrequencies
+                ? `${rawFeatures} × freq(${model.nFrequencies}) → ${model.featureDim}`
+                : `${model.featureDim}`,
+            degrees: [...(model.sh0Input ? [0] : []), ...model.degrees].join(", "),
+            // baked: the view-independent inputs (encoded features + the SH_C0
+            // constant) are pre-multiplied into a per-splat h0_static cache, so the
+            // shader evaluates only the view-direction columns (padded to a multiple
+            // of 4); legacy files carry the encoded features and the full matrix
+            layer0: model.baked
+                ? `baked (${model.featureDim + (model.sh0Input ? 1 : 0)} of ${nIn} inputs pre-multiplied)`
+                : "full input",
+            inputs: String(nIn),
+            hiddenLayers: String(model.nHiddenLayers),
+            neurons: String(model.nNeurons),
+            // effective (unpadded) weight count: the file stores the output layer
+            // already trimmed to 3 rows and rejects padded input widths
+            weights: (
+                nIn * model.nNeurons
+                + (model.nHiddenLayers - 1) * model.nNeurons * model.nNeurons
+                + 3 * model.nNeurons
+            ).toLocaleString(),
+            mlpActivation: "relu", // structurally fixed by the reference implementation
+        });
+    }
     const perf = { frameTime: "—", sortTime: "—" };
     let fpsCtrl = null;
     let sortCtrl = null;
     let benchCtrl = null;
-    const BENCH_BUTTON_LABEL = "Benchmark Neural vs SH";
+    const BENCH_BUTTON_LABEL = "Benchmark";
 
     // --- GPU textures (payloads uploaded exactly as stored in the file) ---
     const makeIntTex = (data, components = 4) => {
@@ -226,34 +253,40 @@ async function main() {
         return tex;
     };
     const splatTexture = makeIntTex(model.splatData);
-    // (wrapped, not passed by reference: map's index argument would land in
-    // makeIntTex's `components` slot)
-    const mlpTextures = model.mlpTexData.map((d) => makeIntTex(d));
-    // MLP weights: raw fp16 bits into a 64-wide RGBA16F texture (texel t at
-    // (t % 64, t / 64) — mirrored by the W() macro in mlp_eval.glsl). A
-    // conventional aspect ratio; degenerate 1-wide tall textures are a known
-    // weak spot of some mobile drivers.
-    const WEIGHTS_W = 64;
-    const weightsH = Math.ceil(model.nWeightTexels / WEIGHTS_W);
-    const weightsData = new Uint16Array(WEIGHTS_W * weightsH * 4);
-    weightsData.set(model.weightData);
-    const weightsTexture = new THREE.DataTexture(
-        weightsData, WEIGHTS_W, weightsH, THREE.RGBAFormat, THREE.HalfFloatType
-    );
-    weightsTexture.minFilter = THREE.NearestFilter;
-    weightsTexture.magFilter = THREE.NearestFilter;
-    weightsTexture.needsUpdate = true;
-    // fp16 → fp32 weights for the uniform-array backing (flat vec4 stream)
-    const weightsFloat = new Float32Array(model.nWeightTexels * 4);
-    for (let i = 0; i < weightsFloat.length; i++) weightsFloat[i] = halfToFloat(model.weightData[i]);
-    // uniform arrays are capped by the device: only offer the option if the vec4
-    // array (plus a few scalar uniforms) fits the smaller of the two stage limits
-    const gl = renderer.getContext();
-    const maxUniformVec = Math.min(
-        gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
-        gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS)
-    );
-    const uniformWeightsFit = model.nWeightTexels + 8 <= maxUniformVec;
+    // per-splat residual parameter textures (fp16 streams, or the packed sh
+    // coefficient levels — the loader reports each texture's u32 components)
+    const paramTextures = model.paramTexData.map((t) => makeIntTex(t.data, t.components));
+    // MLP weights (Neural appearance model only): raw fp16 bits into a 64-wide
+    // RGBA16F texture (texel t at (t % 64, t / 64) — mirrored by the W() macro
+    // in eval_neural.glsl). A conventional aspect ratio; degenerate 1-wide tall
+    // textures are a known weak spot of some mobile drivers.
+    let weightsTexture = null;
+    let weightsFloat = null;
+    let uniformWeightsFit = false;
+    let maxUniformVec = 0;
+    if (isNeural) {
+        const WEIGHTS_W = 64;
+        const weightsH = Math.ceil(model.nWeightTexels / WEIGHTS_W);
+        const weightsData = new Uint16Array(WEIGHTS_W * weightsH * 4);
+        weightsData.set(model.weightData);
+        weightsTexture = new THREE.DataTexture(
+            weightsData, WEIGHTS_W, weightsH, THREE.RGBAFormat, THREE.HalfFloatType
+        );
+        weightsTexture.minFilter = THREE.NearestFilter;
+        weightsTexture.magFilter = THREE.NearestFilter;
+        weightsTexture.needsUpdate = true;
+        // fp16 → fp32 weights for the uniform-array backing (flat vec4 stream)
+        weightsFloat = new Float32Array(model.nWeightTexels * 4);
+        for (let i = 0; i < weightsFloat.length; i++) weightsFloat[i] = halfToFloat(model.weightData[i]);
+        // uniform arrays are capped by the device: only offer the option if the vec4
+        // array (plus a few scalar uniforms) fits the smaller of the two stage limits
+        const gl = renderer.getContext();
+        maxUniformVec = Math.min(
+            gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
+            gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS)
+        );
+        uniformWeightsFit = model.nWeightTexels + 8 <= maxUniformVec;
+    }
     if (!uniformWeightsFit) state.weightSource = "texture"; // the uniform default needs the budget
 
     // --- camera + controls (world up from the file header, derived from the
@@ -298,7 +331,7 @@ async function main() {
         controls.target.copy(center);
     }
 
-    // --- capture pass: per-splat MLP color -> RGBA8 cache, one texel per splat ---
+    // --- capture pass: per-splat color eval -> RGBA8 cache, one texel per splat ---
     const colorRT = new THREE.WebGLRenderTarget(textureWidth, textureHeight, {
         depthBuffer: false, type: THREE.UnsignedByteType,
         minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter,
@@ -309,58 +342,38 @@ async function main() {
 in vec3 position;
 void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
-    // The shared MLP evaluation chunk is spliced into both capture variants:
-    // the fragment-stage fullscreen quad (default) and the vertex-stage point
-    // pass (fallback for drivers whose fragment-stage integer texelFetch is
-    // broken — observed on Samsung Android; the vertex stage reads correctly).
-    const captureFragWrap = await fetchFile("./shaders/capture_mlp.frag");
-    const captureVertWrap = await fetchFile("./shaders/capture_mlp.vert");
+    // The shared capture scaffolding plus the file's appearance model residual
+    // chunk are spliced into both capture variants: the fragment-stage
+    // fullscreen quad (default) and the vertex-stage point pass (fallback for
+    // drivers whose fragment-stage integer texelFetch is broken — observed on
+    // Samsung Android; the vertex stage reads correctly).
+    const captureFragWrap = await fetchFile("./shaders/capture.frag");
+    const captureVertWrap = await fetchFile("./shaders/capture.vert");
     const capturePointFragSrc = await fetchFile("./shaders/capture_point.frag");
-    const mlpEvalGlsl = await fetchFile("./shaders/mlp_eval.glsl");
-    const inject = (wrap, chunk) => wrap.replace("// @inject mlp_eval", chunk);
-    const captureFragSrc = inject(captureFragWrap, mlpEvalGlsl);
-    const captureVertSrc = inject(captureVertWrap, mlpEvalGlsl);
-    // benchmark-only SH-eval variant: same wrappers, standard degree-3 SH chunk
-    const shEvalGlsl = await fetchFile("./shaders/sh_eval.glsl");
-    const captureShFragSrc = inject(captureFragWrap, shEvalGlsl);
-    const captureShVertSrc = inject(captureVertWrap, shEvalGlsl);
+    const captureCommonGlsl = await fetchFile("./shaders/capture_common.glsl");
+    const modelEvalGlsl = await fetchFile(`./shaders/eval_${model.appearance}.glsl`);
+    const colorEvalGlsl = captureCommonGlsl.replace("// @inject residual_eval", modelEvalGlsl);
+    const inject = (wrap, chunk) => wrap.replace("// @inject color_eval", chunk);
+    const captureFragSrc = inject(captureFragWrap, colorEvalGlsl);
+    const captureVertSrc = inject(captureVertWrap, colorEvalGlsl);
 
     const captureUniforms = {
         splatData: { value: splatTexture },
-        mlpTex0: { value: mlpTextures[0] },
-        mlpWeights: { value: weightsTexture }, // active only in texture mode
-        uWeights: { value: weightsFloat },     // active only in uniform mode
         cameraPos: { value: new THREE.Vector3() },
         cameraFwd: { value: new THREE.Vector3() },
         uBase: { value: new THREE.Vector2(model.baseScale, model.baseOffset) },
         uCacheSize: { value: new THREE.Vector2(textureWidth, textureHeight) },
     };
-    for (let k = 1; k < mlpTextures.length; k++)
-        captureUniforms[`mlpTex${k}`] = { value: mlpTextures[k] };
-
-    // Dummy SH coefficient textures + uniforms for the SH benchmark mode, built
-    // lazily on first use (they are large and unused unless the mode is picked).
-    // Content is a cheap hash — SH eval cost is data-independent, so runtime is
-    // representative while the image is meaningless. sh1 = RG (7-bit×9), sh2/sh3 =
-    // RGBA (8-bit×15 / 6-bit×21), the quantized-and-packed layout spark uses.
-    let shUniforms = null;
-    function ensureShUniforms() {
-        if (shUniforms) return;
-        const texels = textureWidth * textureHeight;
-        const dummy = (components) => {
-            const a = new Uint32Array(texels * components);
-            for (let i = 0; i < a.length; i++) a[i] = (i * 2654435761) >>> 0; // Knuth hash
-            return makeIntTex(a, components);
-        };
-        shUniforms = {
-            splatData: { value: splatTexture },
-            cameraPos: captureUniforms.cameraPos, // shared value objs: per-frame update propagates
-            cameraFwd: captureUniforms.cameraFwd,
-            sh1Tex: { value: dummy(2) },
-            sh2Tex: { value: dummy(4) },
-            sh3Tex: { value: dummy(4) },
-            uCacheSize: captureUniforms.uCacheSize,
-        };
+    for (let k = 0; k < paramTextures.length; k++)
+        captureUniforms[`paramTex${k}`] = { value: paramTextures[k] };
+    if (isNeural) {
+        captureUniforms.mlpWeights = { value: weightsTexture }; // active only in texture mode
+        captureUniforms.uWeights = { value: weightsFloat };     // active only in uniform mode
+    } else if (model.appearance === "sh") {
+        // per-level dequantization factor: level scale / signed quantization max
+        captureUniforms.shScales = { value: new THREE.Vector3(
+            model.shScales[0] / 63, model.shScales[1] / 127, model.shScales[2] / 31
+        ) };
     }
 
     // fragment variant: fullscreen quad
@@ -378,17 +391,12 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
     let captureMat = null;
     function buildCaptureMaterial() {
         const wantFragment = state.mlpMode !== "capture-vertex";
-        const sh = state.evalMode === "sh";
-        if (sh) ensureShUniforms();
-        // the SH eval needs no config defines; the MLP eval is fully parametrized
-        const defines = sh ? "" : captureDefines(model, state);
-        const fragEval = sh ? captureShFragSrc : captureFragSrc;
-        const vertEval = sh ? captureShVertSrc : captureVertSrc;
+        const defines = captureDefines(model, state);
         const m = new THREE.RawShaderMaterial({
             glslVersion: THREE.GLSL3,
-            uniforms: sh ? shUniforms : captureUniforms,
-            vertexShader: wantFragment ? fsVert : defines + vertEval,
-            fragmentShader: wantFragment ? defines + fragEval : capturePointFragSrc,
+            uniforms: captureUniforms,
+            vertexShader: wantFragment ? fsVert : defines + captureVertSrc,
+            fragmentShader: wantFragment ? defines + captureFragSrc : capturePointFragSrc,
             depthTest: false, depthWrite: false, blending: THREE.NoBlending,
         });
         if (wantFragment) captureMesh.material = m;
@@ -399,7 +407,7 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
     // Choose the capture stage by comparing each variant's output against a CPU
     // reference (ground truth) for the first row of splats. Some drivers silently
-    // corrupt fragment-stage integer fetches or the MLP evaluation (no GL error,
+    // corrupt fragment-stage integer fetches or the color evaluation (no GL error,
     // no compile failure — seen on Samsung Android), so only a functional readback
     // check catches it. The fragment path is cheaper (no per-point primitive/
     // binning work), so it wins whenever it is correct; comparing against ground
@@ -419,7 +427,7 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         const nProbe = Math.min(64, numSplats);
         captureUniforms.cameraPos.value.copy(camera.position);
         camera.getWorldDirection(captureUniforms.cameraFwd.value);
-        const layers = buildMlpLayers(model);
+        const layers = isNeural ? buildMlpLayers(model) : null;
         const camPos = camera.position.toArray();
         const camFwd = captureUniforms.cameraFwd.value.toArray();
         const opts = { renderBase: state.renderBase, renderResidual: state.renderResidual };
@@ -467,10 +475,6 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
     if (urlParams.get("weights") === "texture") state.weightSource = "texture";
     if (urlParams.get("precision") === "fp32" || urlParams.get("precision") === "fp16")
         state.precision = urlParams.get("precision");
-    if (["mlp", "sh"].includes(urlParams.get("eval"))) {
-        state.evalMode = urlParams.get("eval");
-        state.shProxy = state.evalMode === "sh";
-    }
     buildCaptureMaterial();
 
     // --- render pass: EWA splats, CPU-sorted back-to-front alpha blending ---
@@ -591,7 +595,7 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
             // camera backward axis (world-matrix Z column), as PlayCanvas passes
             _sortBackward.setFromMatrixColumn(camera.matrixWorld, 2).normalize();
             sorter.setCamera(camera.position, _sortBackward);
-            runCapture(); // MLP colors depend only on the camera position
+            runCapture(); // captured colors depend only on the camera position
             cameraChanged = false;
         }
 
@@ -682,20 +686,19 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
     // ---- benchmark: fixed-viewport renders of the baked test-set viewpoints ----
     // Every test view is applied with its exact pose and native intrinsics
     // (the viewport is forced to the configured preset with the intrinsics
-    // kept — at 720p exactly like the reference benchmark). Per eval mode:
-    // first an untimed warmup pass over the whole test set, then per view a
-    // full re-sort (awaiting the worker), one untimed warmup render, and the
-    // configured timed renders; every render includes the capture pass (the
-    // moving-camera frame cost) and ends with a 1x1 readback so timings
-    // include GPU completion (and are not vsync-quantized). By default the
-    // sort and its attribute upload stay outside the timing, matching the
-    // viewer's amortized async-sorter design — the numbers are the
-    // steady-state frame cost at a novel camera position; the "Time sorting"
-    // setting instead folds a forced re-sort into every timed render
-    // (end-to-end novel-view cost). Files without baked cameras fall back to
-    // a seeded random-orbit sequence. `evalModes` selects what runs: ["mlp"],
-    // ["sh"], or both for the Neural-vs-SH comparison (everything else stays
-    // as currently configured).
+    // kept — at 720p exactly like the reference benchmark). First an untimed
+    // warmup pass over the whole test set, then per view a full re-sort
+    // (awaiting the worker), one untimed warmup render, and the configured
+    // timed renders; every render includes the capture pass (the moving-camera
+    // frame cost) and ends with a 1x1 readback so timings include GPU
+    // completion (and are not vsync-quantized). By default the sort and its
+    // attribute upload stay outside the timing, matching the viewer's
+    // amortized async-sorter design — the numbers are the steady-state frame
+    // cost at a novel camera position; the "Time sorting" setting instead
+    // folds a forced re-sort into every timed render (end-to-end novel-view
+    // cost). Files without baked cameras fall back to a seeded random-orbit
+    // sequence. Everything runs as currently configured (shading, and for
+    // Neural files precision and weight backing).
     let benchmarkRunning = false;
 
     // The benchmark button doubles as its progress bar: label text + a partial
@@ -755,7 +758,7 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         });
     }
 
-    async function runBenchmark(evalModes) {
+    async function runBenchmark() {
         if (benchmarkRunning) return;
         benchmarkRunning = true;
         renderer.setAnimationLoop(null); // pause the app loop
@@ -811,8 +814,10 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
             kv("sorting", timeSorting
                 ? "timed (forced re-sort per render)" : "untimed (async, pre-applied)"),
             kv("stage", `${captureStage} (${probeInfo})`),
-            kv("weights", state.weightSource === "uniform" ? "uniform array" : "texture"),
-            kv("precision", state.precision),
+            ...(isNeural ? [
+                kv("weights", state.weightSource === "uniform" ? "uniform array" : "texture"),
+                kv("precision", state.precision),
+            ] : []),
             kv("shading", shadingName),
             kv("σ cutoff", `${Math.round(state.sigma * 1000) / 1000}σ`),
             kv("scale", state.scaleModifier.toFixed(2)),
@@ -820,7 +825,6 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
         const savedPos = camera.position.clone();
         const savedQuat = camera.quaternion.clone();
-        const savedEval = state.evalMode;
         const savedHalfWH = uniforms.halfWH.value.clone();
         uniforms.halfWH.value.set(benchW / 2, benchH / 2);
         const rt = new THREE.WebGLRenderTarget(benchW, benchH, {
@@ -828,10 +832,10 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         });
         const px = new Uint8Array(4);
 
-        // progress units for the button fill: per eval mode, one warmup pass
-        // over all views followed by one measured pass over all views
+        // progress units for the button fill: one warmup pass over all views
+        // followed by one measured pass over all views
         const V = views.length;
-        const totalUnits = evalModes.length * 2 * V;
+        const totalUnits = 2 * V;
 
         // apply view v's pose and await the worker's sort order for it (safety
         // timeout in case a message is lost). `jitter` nudges the camera by more
@@ -867,31 +871,28 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         // hidden/headless tabs, where rAF is throttled to zero)
         const yieldLoop = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-        // Per eval mode: an UNTIMED warmup pass over the whole test set (sort +
-        // one render per view — shader compilation, allocator and driver warm-up,
-        // so the first measured view isn't special), then the measured pass:
-        // per view, await the sort, run one untimed warmup render (absorbs the
-        // fresh sort-attribute upload), and time `repeats` renders. With "Time
+        // An UNTIMED warmup pass over the whole test set (sort + one render per
+        // view — shader compilation, allocator and driver warm-up, so the first
+        // measured view isn't special), then the measured pass: per view, await
+        // the sort, run one untimed warmup render (absorbs the fresh
+        // sort-attribute upload), and time `repeats` renders. With "Time
         // sorting" on, every timed sample is instead a forced re-sort (worker
         // roundtrip + order upload, jitter defeats the dedup) followed by one
         // full render — end-to-end novel-view cost. Orders are never cached
         // across views (4·splats bytes each would pile up on phones with many
         // test views); each view is sorted on demand right before its renders.
-        const benchPass = async (modeIndex) => {
-            const passName = state.evalMode === "sh" ? "SH" : "Neural";
+        const viewMeans = [];
+        try {
             for (let v = 0; v < V; v++) {
-                window.__ngsBenchProgress = { mode: state.evalMode, phase: "warmup", view: v, of: V };
-                updateBenchButton(`${passName} warmup ${v + 1}/${V}`,
-                    (modeIndex * 2 * V + v) / totalUnits);
+                window.__ngsBenchProgress = { phase: "warmup", view: v, of: V };
+                updateBenchButton(`${modelName} warmup ${v + 1}/${V}`, v / totalUnits);
                 await sortView(v);
                 frame();
                 await yieldLoop();
             }
-            const viewMeans = [];
             for (let v = 0; v < V; v++) {
-                window.__ngsBenchProgress = { mode: state.evalMode, phase: "measure", view: v, of: V };
-                updateBenchButton(`${passName} ${v + 1}/${V}`,
-                    (modeIndex * 2 * V + V + v) / totalUnits);
+                window.__ngsBenchProgress = { phase: "measure", view: v, of: V };
+                updateBenchButton(`${modelName} ${v + 1}/${V}`, (V + v) / totalUnits);
                 await sortView(v);
                 frame(); // warmup render: absorbs the fresh sort-attribute upload
                 if (timeSorting) {
@@ -910,21 +911,9 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
                 }
                 await yieldLoop();
             }
-            return viewMeans;
-        };
-
-        const results = []; // [{ mode, viewMeans }]
-        try {
-            for (let mi = 0; mi < evalModes.length; mi++) {
-                state.evalMode = evalModes[mi];
-                buildCaptureMaterial();
-                results.push({ mode: evalModes[mi], viewMeans: await benchPass(mi) });
-            }
         } finally {
             rt.dispose();
             onSortApplied = null;
-            state.evalMode = savedEval;
-            buildCaptureMaterial();
             updateBenchButton(BENCH_BUTTON_LABEL, null);
             benchCtrl?.enable();
             uniforms.halfWH.value.copy(savedHalfWH);
@@ -936,35 +925,22 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
             benchmarkRunning = false;
         }
 
-        // stats: label row + one row per mode, column-aligned monospace
-        const modeName = { mlp: "Neural", sh: "SH degree 3" };
-        const stats = results.map(({ mode, viewMeans }) => {
-            const sorted = [...viewMeans].sort((a, b) => a - b);
-            const avg = sorted.reduce((s, v) => s + v, 0) / sorted.length;
-            return {
-                name: modeName[mode],
-                avg,
-                cells: [
-                    ["avg", `${avg.toFixed(2)} ms`],
-                    ["med", `${sorted[sorted.length >> 1].toFixed(2)} ms`],
-                    ["min", `${sorted[0].toFixed(2)} ms`],
-                    ["max", `${sorted[sorted.length - 1].toFixed(2)} ms`],
-                    ["fps", (1000 / avg).toFixed(1)],
-                ],
-            };
-        });
-        const nameW = Math.max(...stats.map((s) => s.name.length));
-        const colW = stats[0].cells.map(([k, v], i) =>
-            Math.max(k.length, ...stats.map((s) => s.cells[i][1].length)));
-        const header = "".padEnd(nameW) + "   " +
-            stats[0].cells.map(([k], i) => k.padEnd(colW[i])).join("   ").trimEnd();
-        const rows = stats.map((s) =>
-            s.name.padEnd(nameW) + "   " +
-            s.cells.map(([, v], i) => v.padEnd(colW[i])).join("   ").trimEnd());
-        let statsText = [header, ...rows].join("\n");
-        if (stats.length === 2)
-            statsText += `\n\n${stats[1].name} / ${stats[0].name} time: ` +
-                `${(stats[1].avg / stats[0].avg).toFixed(3)}x`;
+        // stats: label row + the appearance model's row, column-aligned monospace
+        const sorted = [...viewMeans].sort((a, b) => a - b);
+        const avg = sorted.reduce((s, v) => s + v, 0) / sorted.length;
+        const cells = [
+            ["avg", `${avg.toFixed(2)} ms`],
+            ["med", `${sorted[sorted.length >> 1].toFixed(2)} ms`],
+            ["min", `${sorted[0].toFixed(2)} ms`],
+            ["max", `${sorted[sorted.length - 1].toFixed(2)} ms`],
+            ["fps", (1000 / avg).toFixed(1)],
+        ];
+        const colW = cells.map(([k, v]) => Math.max(k.length, v.length));
+        const header = "".padEnd(modelName.length) + "   " +
+            cells.map(([k], i) => k.padEnd(colW[i])).join("   ").trimEnd();
+        const row = modelName + "   " +
+            cells.map(([, v], i) => v.padEnd(colW[i])).join("   ").trimEnd();
+        const statsText = [header, row].join("\n");
 
         // on-screen results panel (tap to dismiss): bottom-centered in the shared
         // overlay stack, shrink-to-fit its longest line, above any error field
@@ -976,14 +952,15 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
             "cursor:pointer;order:1;";
         el.textContent =
             `Benchmark — ${views.length} views × ${repeats} renders, re-sorted per view, ` +
-            `warmup pass per mode\n\n` +
+            `warmup pass\n\n` +
             `${settings}\n\n${statsText}\n\n(tap to dismiss)`;
         el.addEventListener("click", () => el.remove());
         overlayContainer().append(el);
         // machine-readable copy for the headless harness
         window.__ngsBenchmark = {
+            model: model.appearance, dummyParams: Boolean(model.dummyParams),
             views: views.length, repeats, timeSorting,
-            width: benchW, height: benchH, results,
+            width: benchW, height: benchH, viewMeans,
         };
     }
 
@@ -1056,38 +1033,54 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         if ((window.devicePixelRatio || 1) >= 2)
             gui.add(state, "highRes").name("High res").onChange(resize);
 
-        // MLP weight backing — uniform array (default) vs texture (the uniform
-        // option only when it fits the device's uniform-vector budget; the
-        // control is pinned to texture + noted otherwise)
-        const weightCtrl = gui.add(state, "weightSource", {
-            "Uniform array": "uniform",
-            "Texture": "texture",
-        }).name("MLP weights")
-            .onChange(() => { buildCaptureMaterial(); cameraChanged = true; });
-        if (!uniformWeightsFit) {
-            state.weightSource = "texture";
-            weightCtrl.setValue("texture").disable()
-                .name(`MLP weights (uniform > ${maxUniformVec} vec4 limit)`);
+        if (isNeural) {
+            // MLP weight backing — uniform array (default) vs texture (the uniform
+            // option only when it fits the device's uniform-vector budget; the
+            // control is pinned to texture + noted otherwise)
+            const weightCtrl = gui.add(state, "weightSource", {
+                "Uniform array": "uniform",
+                "Texture": "texture",
+            }).name("MLP weights")
+                .onChange(() => { buildCaptureMaterial(); cameraChanged = true; });
+            if (!uniformWeightsFit) {
+                state.weightSource = "texture";
+                weightCtrl.setValue("texture").disable()
+                    .name(`MLP weights (uniform > ${maxUniformVec} vec4 limit)`);
+            }
+
+            gui.add(state, "precision", { "fp16": "fp16", "fp32": "fp32" }).name("MLP precision")
+                .onChange(() => { buildCaptureMaterial(); cameraChanged = true; });
         }
 
-        gui.add(state, "precision", { "fp16": "fp16", "fp32": "fp32" }).name("MLP precision")
-            .onChange(() => { buildCaptureMaterial(); cameraChanged = true; });
-
         const modelFolder = gui.addFolder("Model info");
+        modelFolder.add(sceneInfo, "appearance").name("Appearance").disable();
         modelFolder.add(sceneInfo, "splats").name("Splats").disable();
         modelFolder.add(sceneInfo, "fileSize").name("File size").disable();
         modelFolder.add(sceneInfo, "antialiasing").name("Mip filter").disable();
         modelFolder.add(sceneInfo, "baseRange").name("Base range").disable();
-        modelFolder.add(sceneInfo, "features").name("Features").disable();
-        modelFolder.add(sceneInfo, "degrees").name("SH degrees").disable();
+        if (model.appearance === "sh") {
+            modelFolder.add(sceneInfo, "degrees").name("SH degrees").disable();
+            modelFolder.add(sceneInfo, "coefficients").name("Coefficients").disable();
+        } else if (model.appearance === "sv") {
+            modelFolder.add(sceneInfo, "sites").name("Voronoi sites").disable();
+        } else if (model.appearance === "nasg" || model.appearance === "nasgabor") {
+            modelFolder.add(sceneInfo, "lobes")
+                .name(model.appearance === "nasg" ? "Lobes" : "Gabor lobes").disable();
+        } else {  // neural
+            modelFolder.add(sceneInfo, "features").name("Features").disable();
+            modelFolder.add(sceneInfo, "degrees").name("SH degrees").disable();
+        }
         modelFolder.add(sceneInfo, "testViews").name("Test views").disable();
-        modelFolder.add(sceneInfo, "layer0").name("Layer 0").disable();
-        const mlpFolder = modelFolder.addFolder("MLP");
-        mlpFolder.add(sceneInfo, "weights").name("Weights").disable();
-        mlpFolder.add(sceneInfo, "inputs").name("Inputs").disable();
-        mlpFolder.add(sceneInfo, "hiddenLayers").name("Hidden layers").disable();
-        mlpFolder.add(sceneInfo, "neurons").name("Neurons / layer").disable();
-        mlpFolder.add(sceneInfo, "mlpActivation").name("Activation").disable();
+        if (isNeural) {
+            modelFolder.add(sceneInfo, "layer0").name("Layer 0").disable();
+            const mlpFolder = modelFolder.addFolder("MLP");
+            mlpFolder.add(sceneInfo, "weights").name("Weights").disable();
+            mlpFolder.add(sceneInfo, "inputs").name("Inputs").disable();
+            mlpFolder.add(sceneInfo, "hiddenLayers").name("Hidden layers").disable();
+            mlpFolder.add(sceneInfo, "neurons").name("Neurons / layer").disable();
+            mlpFolder.add(sceneInfo, "mlpActivation").name("Activation").disable();
+        }
+        modelFolder.add(sceneInfo, "baseActivation").name("Base activation").disable();
         modelFolder.add(sceneInfo, "colorActivation").name("Color activation").disable();
         modelFolder.add(sceneInfo, "residualActivation").name("Residual activation").disable();
         modelFolder.close();
@@ -1099,27 +1092,16 @@ void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }`;
         // include a forced re-sort (worker roundtrip + order upload) in every
         // timed render — end-to-end novel-view cost instead of steady-state
         benchFolder.add(benchSettings, "timeSorting").name("Time sorting");
-        // swap the MLP for the standard degree-3 SH proxy in the same capture
-        // pass (placeholder coefficients — the image is meaningless, only the
-        // eval cost matters; useful for eyeballing frame time interactively).
-        benchFolder.add(state, "shProxy").name("Show SH proxy")
-            .onChange(() => {
-                state.evalMode = state.shProxy ? "sh" : "mlp";
-                buildCaptureMaterial();
-                cameraChanged = true;
-            });
-        benchCtrl = benchFolder.add({ benchmark: () => runBenchmark(["mlp", "sh"]) }, "benchmark")
+        benchCtrl = benchFolder.add({ benchmark: () => runBenchmark() }, "benchmark")
             .name(BENCH_BUTTON_LABEL);
         benchFolder.close();
     }
 
-    // ?bench=mlp|sh|both auto-runs the benchmark once the first frame is up and
-    // mirrors the results into a #bench-json div (for headless / scripted runs).
-    const benchParam = urlParams.get("bench");
-    if (["mlp", "sh", "both"].includes(benchParam)) {
-        const modes = benchParam === "both" ? ["mlp", "sh"] : [benchParam];
+    // ?bench=1 auto-runs the benchmark once the first frame is up and mirrors
+    // the results into a #bench-json div (for headless / scripted runs).
+    if (urlParams.get("bench")) {
         requestAnimationFrame(async () => {
-            await runBenchmark(modes);
+            await runBenchmark();
             const div = document.createElement("div");
             div.id = "bench-json";
             div.textContent = JSON.stringify(window.__ngsBenchmark);

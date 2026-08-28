@@ -64,37 +64,70 @@ export function chooseModel(sections, models) {
 }
 
 // ============================================================================
-// .ngsplat loading (neural appearance model)
+// .ngsplat loading
 //
 // The file contains the exact texture payloads: splatData (RGBA32UI:
-// pre-activation base rgb8 + opacity a8, pos fp16, quat 24b, log-scales 3x8b),
-// one or two per-splat fp16 textures (8 values per RGBA32UI texel), and the
-// residual-MLP weights as raw fp16 bits in capture-shader texel order (3-row
-// output layer). It also carries the test-set viewpoints of the scene the
-// model was trained on, used by the fixed-viewport benchmark mode. No
-// repacking happens here; the only derived data is the float splat centers for
-// the CPU depth sorter.
+// pre-activation base rgb8 + opacity a8, pos fp16, quat 24b, log-scales 3x8b)
+// plus the per-splat residual parameters of one of five appearance models,
+// identified by header flags bits 3-4 plus bit 6 as the high bit:
+//   neural (0) — one or two fp16 textures (8 values per RGBA32UI texel) and
+//     the residual-MLP weights as raw fp16 bits in capture-shader texel order
+//     (3-row output layer). Two layer-0 layouts, distinguished by flags bit 2:
+//       BAKED (bit set) — the per-splat textures hold h0_static, the
+//         view-independent share of mlp layer 0 (one fp16 per neuron; the
+//         encoded features and the constant SH_C0 input are pre-multiplied at
+//         export time), and layer 0 of the weight stream holds only the
+//         view-direction columns, zero-padded to a multiple of 4.
+//       LEGACY (bit clear: older files, and files where the bake would not
+//         pay off) — the per-splat textures hold the encoded features and
+//         layer 0 of the weight stream is the full
+//         [neurons x (features + SH_C0 + degrees)] matrix, so the shader
+//         assembles the whole input vector per splat.
+//     Both evaluate the identical color model; BAKED just moves ~31% of the
+//     per-splat MACs to export time at the same file size.
+//   sh (1) — quantized coefficients in the packed degree-3 SH bit layout spark
+//     uses: one texture per stored degree level (RG32UI with 9x7-bit codes for
+//     degree 1, RGBA32UI with 15x8-bit / 21x6-bit codes for degrees 2 / 3),
+//     signed fields bit-packed little-endian at shared per-level scales
+//     carried in the header.
+//   sv (2) — spherical Voronoi sites: 7 fp16 values per site (unit site
+//     direction, exp-activated temperature, activated site color).
+//   nasg (3) — NASG lobes: 12 fp16 values per lobe (frame vectors x and z,
+//     2*lambda, anisotropy, precomputed normalization constant, activated rgb
+//     weights).
+//   nasgabor (4) — the nasg layout plus the Gabor frequency (13 fp16 values
+//     per lobe).
+// The sv/nasg/nasgabor payloads (and the neural h0_static) are fp16 streams,
+// 8 values per RGBA32UI texel, at most 8 textures.
 //
-// Two layer-0 layouts are supported, distinguished by flags bit 2:
-//   BAKED (bit set) — the per-splat textures hold h0_static, the
-//     view-independent share of mlp layer 0 (one fp16 per neuron; the encoded
-//     features and the constant SH_C0 input are pre-multiplied at export
-//     time), and layer 0 of the weight stream holds only the view-direction
-//     columns, zero-padded to a multiple of 4.
-//   LEGACY (bit clear, the layout of older files) — the per-splat textures
-//     hold the encoded features and layer 0 of the weight stream is the full
-//     [neurons x (features + SH_C0 + degrees)] matrix, so the shader
-//     assembles the whole input vector per splat.
-// Both evaluate the identical color model; BAKED just moves ~31% of the
-// per-splat MACs to export time at the same file size.
+// The file also carries the test-set viewpoints of the scene the model was
+// trained on, used by the fixed-viewport benchmark mode. No repacking happens
+// here; the only derived data is the float splat centers for the CPU sorter.
 // ============================================================================
 
 const MAGIC = "NGSPLAT\n";
 export const SH_C0 = 0.28209479177387814;
-// header colorActivation codes; code 2 (sigmoid) is defined by the
-// format but is never written
-export const COLOR_ACTIVATION_NAMES = ["relu", "softplus (β10)", "sigmoid", "satexp (additive)"];
-export const RESIDUAL_ACTIVATION_NAMES = ["none", "tanh"];
+// header flags bits 3-4 + bit 6 (the high bit, added after bit 5 was taken
+// by the exp base); the ids follow the backend enum except neural = 0, since
+// files predating the multi-model format have zero there
+export const APPEARANCE_MODELS = ["neural", "sh", "sv", "nasg", "nasgabor"];
+export const APPEARANCE_NAMES = {
+    sh: "SH", sv: "SV", nasg: "NASG", nasgabor: "NASGabor", neural: "Neural",
+};
+// header colorActivation codes
+export const COLOR_ACTIVATION_NAMES = ["relu", "softplus (β10)", "sigmoid (4x)", "satexp", "hardsigmoid", "none"];
+// color codes whose activation applies the 0.5 gray shift (act(x + 0.5)); the
+// shift is baked into the stored base with the identity base activation and
+// applied in the shader with the exp base
+export const SHIFTED_COLOR_CODES = [0, 1, 4, 5];
+export const RESIDUAL_ACTIVATION_NAMES = ["none", "tanh", "softplus (β10)"];
+// packed sh level layout (shared with eval_sh.glsl):
+// bits per signed field and u32 words per splat, for degrees 1..3
+export const SH_PACK_LEVELS = [
+    { bits: 7, words: 2 },
+    { bits: 8, words: 4 },
+    { bits: 6, words: 4 },
+];
 
 // float16 bit pattern -> float32, via a lazily built 64K lookup table.
 let halfTable = null;
@@ -135,19 +168,35 @@ export function loadNgsplat(buffer) {
     const numSplats = u32();
     const textureWidth = u32();
     const textureHeight = u32();
-    const featureDim = u32(); // ENCODED feature dims (frequency encoding is pre-baked)
-    const nFrequencies = u32(); // informational only
-    const shDegreeMask = u32(); // bit l set = view-direction SH degree l (1..6) is an mlp input
-    const colorActivation = u32(); // 0 relu | 1 softplus(β10) | 2 sigmoid (unused) | 3 additive/satexp
-    const residualActivation = u32(); // 0 none | 1 tanh (0 written for colorActivation 3)
+    // per-model slot: neural ENCODED feature dims (frequency encoding is
+    // pre-baked) | sh 0 | sv number of sites | nasg/nasgabor number of lobes
+    const modelDims = u32();
+    const nFrequencies = u32(); // neural only, informational
+    // neural: bit l set = view-direction SH degree l (1..6) is an mlp input;
+    // sh: bit l set = coefficient degree l stored (contiguous 1..D)
+    const shDegreeMask = u32();
+    // 0 relu | 1 softplus(β10) | 2 sigmoid(4x) | 3 satexp | 4 hardsigmoid | 5 none
+    const colorActivation = u32();
+    // 0 none | 1 tanh | 2 softplus — functional for neural (mlp output) and sh
+    // (band sum), informational (baked) for sv/nasg/nasgabor
+    let residualActivation = u32();
     const nNeurons = u32();
     const nHiddenLayers = u32();
     const flags = u32();
     const properAA = (flags & 1) !== 0;
-    const sh0Input = (flags & 2) === 0; // bit 1 = constant SH_C0 mlp input DISABLED
-    const baked = (flags & 4) !== 0;    // bit 2 = layer 0 is baked (see the header comment)
+    const sh0Input = (flags & 2) === 0; // bit 1 = constant SH_C0 mlp input DISABLED (neural)
+    const baked = (flags & 4) !== 0;    // bit 2 = layer 0 is baked (neural; see the header comment)
+    const appearance = APPEARANCE_MODELS[((flags >> 3) & 3) | (((flags >> 6) & 1) << 2)];
+    // bit 5 = exp base activation; legacy additive-combo files predate the bit
+    // (satexp always pairs with the exp base) and imply the softplus residual
+    // via their residual code 0, which is resolved into the literal code here
+    const baseExp = (flags & 32) !== 0 || colorActivation === 3;
+    if (appearance === "neural" && colorActivation === 3 && !(flags & 32))
+        residualActivation = 2;
     const baseScale = f32(); // base pre-activation d = code8 * scale + offset
     const baseOffset = f32();
+    // per-level quantization scales of the packed sh coefficients (0 = absent)
+    const shScales = appearance === "sh" ? [f32(), f32(), f32()] : null;
     const camCenter = [f32(), f32(), f32()];
     const camUp = [f32(), f32(), f32()];
     const camDistance = f32();
@@ -169,41 +218,63 @@ export function loadNgsplat(buffer) {
 
     if (textureWidth !== 2048) throw new Error(`texWidth must be 2048 (render_ewa.vert hardcodes it), got ${textureWidth}`);
     if (shDegreeMask & ~0b1111110) throw new Error("shDegreeMask has bits outside degrees 1-6");
-    if (colorActivation === 2) throw new Error("colorActivation 2 (sigmoid) has no shader implementation");
-    if (colorActivation > 3) throw new Error(`unknown colorActivation code ${colorActivation}`);
-    if (residualActivation > 1) throw new Error(`unknown residualActivation code ${residualActivation}`);
-    if (nNeurons % 4 !== 0 || nNeurons < 4) throw new Error(`nNeurons must be a multiple of 4 >= 4, got ${nNeurons}`);
-    if (nHiddenLayers < 1) throw new Error(`nHiddenLayers must be >= 1, got ${nHiddenLayers}`);
+    if (colorActivation > 5) throw new Error(`unknown colorActivation code ${colorActivation}`);
+    if (residualActivation > 2) throw new Error(`unknown residualActivation code ${residualActivation}`);
 
     const degrees = [];
     for (let l = 1; l <= 6; l++) if (shDegreeMask & (1 << l)) degrees.push(l);
-    const nDirectionValues = degrees.reduce((s, l) => s + 2 * l + 1, 0);
-    // layer-0 input width as stored in the file, and the number of per-splat
-    // fp16 values each layout keeps in its textures
-    let l0In, nPerSplatValues;
-    if (baked) {
-        // only the view-direction SH values, zero-padded to /4 (features + SH_C0
-        // are pre-multiplied into the per-splat h0_static cache: one per neuron)
-        if (!nDirectionValues) throw new Error("baked layout needs at least one view-direction SH degree");
-        if (nNeurons > 16)
-            throw new Error(`nNeurons must be <= 16 in the baked layout, got ${nNeurons} `
-                + `(the h0_static cache is capped at 2 textures = 16 fp16 values)`);
-        l0In = Math.ceil(nDirectionValues / 4) * 4;
-        nPerSplatValues = nNeurons;
+    // per-model payload plan: u32 components of each per-splat parameter
+    // texture, and (for the fp16 streams) the number of values per splat
+    let l0In = 0, paramComponents, nSites = 0, nLobes = 0;
+    if (appearance === "neural") {
+        if (nNeurons % 4 !== 0 || nNeurons < 4) throw new Error(`nNeurons must be a multiple of 4 >= 4, got ${nNeurons}`);
+        if (nHiddenLayers < 1) throw new Error(`nHiddenLayers must be >= 1, got ${nHiddenLayers}`);
+        const nDirectionValues = degrees.reduce((s, l) => s + 2 * l + 1, 0);
+        // layer-0 input width as stored in the file, and the number of per-splat
+        // fp16 values each layout keeps in its textures
+        let nPerSplatValues;
+        if (baked) {
+            // only the view-direction SH values, zero-padded to /4 (features + SH_C0
+            // are pre-multiplied into the per-splat h0_static cache: one per neuron)
+            if (!nDirectionValues) throw new Error("baked layout needs at least one view-direction SH degree");
+            if (nNeurons > 16)
+                throw new Error(`nNeurons must be <= 16 in the baked layout, got ${nNeurons} `
+                    + `(the h0_static cache is capped at 2 textures = 16 fp16 values)`);
+            l0In = Math.ceil(nDirectionValues / 4) * 4;
+            nPerSplatValues = nNeurons;
+        } else {
+            // the full trained input: encoded features + the SH_C0 constant + degrees
+            if (modelDims < 1 || modelDims > 16)
+                throw new Error(`unsupported featureDim ${modelDims} (max 2 feature textures = 16 encoded dims)`);
+            l0In = modelDims + (sh0Input ? 1 : 0) + nDirectionValues;
+            if (l0In % 4 !== 0) throw new Error(`MLP input dim ${l0In} is not a multiple of 4`);
+            nPerSplatValues = modelDims;
+        }
+        // 3-row output layer: (nNeurons / 4) input blocks x 3 output texels each
+        const expectedTexels =
+            (l0In / 4) * nNeurons + (nHiddenLayers - 1) * (nNeurons / 4) * nNeurons + (nNeurons / 4) * 3;
+        if (nWeightTexels !== expectedTexels)
+            throw new Error(`weight texel count ${nWeightTexels} != expected ${expectedTexels} `
+                + `for the ${baked ? "baked" : "legacy"} layer-0 layout`);
+        paramComponents = Array.from({ length: Math.ceil(nPerSplatValues / 8) }, () => 4);
     } else {
-        // the full trained input: encoded features + the SH_C0 constant + degrees
-        if (featureDim < 1 || featureDim > 16)
-            throw new Error(`unsupported featureDim ${featureDim} (max 2 feature textures = 16 encoded dims)`);
-        l0In = featureDim + (sh0Input ? 1 : 0) + nDirectionValues;
-        if (l0In % 4 !== 0) throw new Error(`MLP input dim ${l0In} is not a multiple of 4`);
-        nPerSplatValues = featureDim;
+        if (nWeightTexels !== 0)
+            throw new Error(`the ${appearance} payload carries no weight stream, got ${nWeightTexels} texels`);
+        if (appearance === "sh") {
+            // one packed texture per stored level, contiguous from degree 1
+            if (degrees.some((l, idx) => l !== idx + 1) || degrees.length > 3)
+                throw new Error(`sh degrees must be contiguous 1..3, got mask ${shDegreeMask}`);
+            paramComponents = degrees.map((l) => SH_PACK_LEVELS[l - 1].words);
+        } else {
+            const perUnit = { sv: 7, nasg: 12, nasgabor: 13 }[appearance];
+            if (appearance === "sv") nSites = modelDims;
+            else nLobes = modelDims;
+            const nValues = modelDims * perUnit;
+            if (nValues > 64)
+                throw new Error(`${nValues} residual values per splat exceed the cap of 64 (8 fp16 textures)`);
+            paramComponents = Array.from({ length: Math.ceil(nValues / 8) }, () => 4);
+        }
     }
-    // 3-row output layer: (nNeurons / 4) input blocks x 3 output texels each
-    const expectedTexels =
-        (l0In / 4) * nNeurons + (nHiddenLayers - 1) * (nNeurons / 4) * nNeurons + (nNeurons / 4) * 3;
-    if (nWeightTexels !== expectedTexels)
-        throw new Error(`weight texel count ${nWeightTexels} != expected ${expectedTexels} `
-            + `for the ${baked ? "baked" : "legacy"} layer-0 layout`);
 
     // slice() copies into fresh, aligned ArrayBuffers.
     const take = (Type, count) => {
@@ -214,10 +285,9 @@ export function loadNgsplat(buffer) {
     const texels = textureWidth * textureHeight;
     const weightData = take(Uint16Array, nWeightTexels * 4); // raw fp16 bits (RGBA16F upload)
     const splatData = take(Uint32Array, texels * 4);
-    // per-splat fp16 payload: h0_static (baked) or the encoded features (legacy)
-    const numMlpTex = Math.ceil(nPerSplatValues / 8);
-    const mlpTexData = [];
-    for (let k = 0; k < numMlpTex; k++) mlpTexData.push(take(Uint32Array, texels * 4));
+    // per-splat residual parameters (see the format comment above)
+    const paramTexData = paramComponents.map((components) =>
+        ({ data: take(Uint32Array, texels * components), components }));
     if (o !== buffer.byteLength)
         console.warn(`ngsplat: ${buffer.byteLength - o} trailing bytes ignored`);
 
@@ -231,16 +301,139 @@ export function loadNgsplat(buffer) {
     }
 
     return {
-        numSplats, textureWidth, textureHeight,
-        featureDim, nFrequencies, shDegreeMask, degrees, colorActivation, residualActivation,
-        nNeurons, nHiddenLayers, sh0Input, properAA, baked,
-        nDirectionValues, l0In,
+        numSplats, textureWidth, textureHeight, appearance,
+        featureDim: modelDims, nFrequencies, shDegreeMask, degrees,
+        colorActivation, residualActivation, baseExp,
+        nNeurons, nHiddenLayers, sh0Input, properAA, baked, l0In,
+        nSites, nLobes, shScales,
         baseScale, baseOffset,
         camCenter, camUp, camDistance,
         testCameras,
-        weightData, nWeightTexels, splatData, mlpTexData, centers,
+        weightData, nWeightTexels, splatData, paramTexData, centers,
         fileBytes: buffer.byteLength,
     };
+}
+
+// ============================================================================
+// Appearance override (gallery selector, ?appearance=): re-dresses a loaded
+// model with a DIFFERENT appearance model whose per-splat parameters are
+// dummy values from dummy_params.json, so any model can be benchmarked on the
+// same gaussians. Geometry, cameras, and activation codes are kept; every
+// model's evaluation cost is data-independent, so the timings are
+// representative while the residual colors are meaningless.
+// ============================================================================
+
+const _floatBits = new Float32Array(1);
+const _uintBits = new Uint32Array(_floatBits.buffer);
+// float32 -> fp16 bit pattern by truncation; only used for the dummy fill,
+// whose values are guaranteed to be in the fp16 normal range
+function floatToHalf(v) {
+    _floatBits[0] = v;
+    const b = _uintBits[0];
+    return ((b >>> 16) & 0x8000) | ((((b >>> 23) & 0xFF) - 112) << 10) | ((b >>> 13) & 0x3FF);
+}
+
+// Deterministic dummy words: a small hash-filled tile, repeated — caches work
+// on addresses, not values, so content repetition is timing-neutral and the
+// fill stays fast at millions of splats.
+function dummyWords(count, seed, makeWord) {
+    const words = new Uint32Array(count);
+    let h = seed | 0;
+    const rand = () => {
+        h = (Math.imul(h ^ (h >>> 15), 2654435761) + 0x9E3779B9) | 0;
+        return (h >>> 0) / 4294967296;
+    };
+    const tile = Math.min(count, 4096);
+    for (let i = 0; i < tile; i++) words[i] = makeWord(rand);
+    for (let filled = tile; filled < count; ) {
+        const n = Math.min(filled, count - filled);
+        words.copyWithin(filled, 0, n);
+        filled += n;
+    }
+    return words;
+}
+
+// fp16 dummy values: signed magnitude in [0.1, 0.55] — no denormals (slow on
+// some mobile GPUs) and small enough that every model stays in its main
+// branch (e.g. |<dir, frame vector>| < 1 for the lobe response)
+const dummyHalf = (rand) => floatToHalf((rand() < 0.5 ? -1 : 1) * (0.1 + 0.45 * rand()));
+const dummyHalfPair = (rand) => dummyHalf(rand) | (dummyHalf(rand) << 16);
+
+export function applyAppearanceOverride(model, appearance, dummyConfigs) {
+    if (appearance === model.appearance) return model;
+    const config = dummyConfigs?.[appearance];
+    if (!config) throw new Error(`dummy_params.json has no "${appearance}" configuration`);
+    const texels = model.textureWidth * model.textureHeight;
+    const halfTex = (seed) => ({ data: dummyWords(texels * 4, seed, dummyHalfPair), components: 4 });
+    const out = {
+        ...model,
+        appearance,
+        dummyParams: true,
+        featureDim: 0, nFrequencies: 0, shDegreeMask: 0, degrees: [],
+        sh0Input: false, baked: false, l0In: 0,
+        nNeurons: 0, nHiddenLayers: 0, nWeightTexels: 0,
+        weightData: new Uint16Array(0),
+        nSites: 0, nLobes: 0, shScales: null,
+    };
+    if (appearance === "sh") {
+        // a single maximum degree, like the reference configuration
+        if (!(config.shDegree >= 1 && config.shDegree <= 3))
+            throw new Error("dummy sh configuration: shDegree must be in 1..3 (the packed layout's cap)");
+        out.degrees = Array.from({ length: config.shDegree }, (_, i) => i + 1);
+        out.shDegreeMask = out.degrees.reduce((m, l) => m | (1 << l), 0);
+        // dummy dequantization scales — a value-magnitude choice like the
+        // fill range, not configuration
+        out.shScales = [0.3, 0.15, 0.08];
+        // bit-packed coefficient codes: raw hash words decode to valid ints
+        out.paramTexData = out.degrees.map((l, i) => ({
+            data: dummyWords(texels * SH_PACK_LEVELS[l - 1].words, 17 + i, (rand) => (rand() * 4294967296) >>> 0),
+            components: SH_PACK_LEVELS[l - 1].words,
+        }));
+    } else if (appearance === "sv") {
+        out.nSites = config.nSites;
+        out.paramTexData = Array.from({ length: Math.ceil(out.nSites * 7 / 8) }, (_, i) => halfTex(23 + i));
+    } else if (appearance === "nasg" || appearance === "nasgabor") {
+        const perLobe = appearance === "nasg" ? 12 : 13;
+        out.nLobes = config.nLobes;
+        out.paramTexData = Array.from(
+            { length: Math.ceil(out.nLobes * perLobe / 8) }, (_, i) => halfTex(31 + i));
+    } else {  // neural
+        // featureDim counts ENCODED inputs; degree 0 = the constant input
+        out.featureDim = config.featureDim;
+        out.nNeurons = config.nNeurons;
+        out.nHiddenLayers = config.nHiddenLayers;
+        out.degrees = config.degrees.filter((l) => l > 0);
+        out.sh0Input = config.degrees.includes(0);
+        out.shDegreeMask = out.degrees.reduce((m, l) => m | (1 << l), 0);
+        if (out.featureDim > 16 || out.nNeurons % 4 !== 0)
+            throw new Error("dummy neural configuration: featureDim is capped at 16 "
+                + "(2 feature textures) and nNeurons must be a multiple of 4");
+        const nDirectionValues = out.degrees.reduce((s, l) => s + 2 * l + 1, 0);
+        // bake layer 0 unless the h0_static cache (one value per neuron)
+        // needs more per-splat textures than the features it replaces
+        // (fetches are the cost; ties go to baked) or exceeds the 2-texture
+        // cap — otherwise the legacy layout (stored features + full layer 0)
+        out.baked = out.nNeurons <= 16
+            && Math.ceil(out.nNeurons / 8) <= Math.ceil(out.featureDim / 8);
+        if (out.baked) {
+            out.l0In = Math.ceil(nDirectionValues / 4) * 4;
+            out.paramTexData = Array.from(
+                { length: Math.ceil(out.nNeurons / 8) }, (_, i) => halfTex(11 + i));
+        } else {
+            out.l0In = out.featureDim + (out.sh0Input ? 1 : 0) + nDirectionValues;
+            if (out.l0In % 4 !== 0)
+                throw new Error(`dummy neural configuration: mlp input width ${out.l0In} `
+                    + "is not a multiple of 4 — adjust featureDim or degrees");
+            out.paramTexData = Array.from(
+                { length: Math.ceil(out.featureDim / 8) }, (_, i) => halfTex(11 + i));
+        }
+        out.nWeightTexels = (out.l0In / 4) * out.nNeurons
+            + (out.nHiddenLayers - 1) * (out.nNeurons / 4) * out.nNeurons
+            + (out.nNeurons / 4) * 3;
+        const weightWords = dummyWords(out.nWeightTexels * 2, 7, dummyHalfPair);
+        out.weightData = new Uint16Array(weightWords.buffer);
+    }
+    return out;
 }
 
 // full input width of the TRAINED mlp. In the baked layout the file's layer 0
@@ -252,12 +445,39 @@ export function mlpInputDim(model) {
 }
 
 // #define block for the capture shader, derived from the model header. The
+// first group parametrizes the shared capture_common.glsl scaffolding, the
+// rest the active appearance model's residual chunk. For the neural chunk the
 // degree offsets index into the layer-0 input array: in the baked layout it
 // holds only the view-direction SH values (so they start at 0), in the legacy
 // layout they follow the encoded features and the SH_C0 constant.
 // renderBase / renderResidual mirror the reference renderer's base-color and
 // residual debug switches.
 export function captureDefines(model, { renderBase, renderResidual, weightSource, precision }) {
+    // the 0.5 gray shift could not be baked into the stored base when the exp
+    // base activation sits between the raw base and it — apply it in-shader
+    const shiftInShader = model.baseExp && SHIFTED_COLOR_CODES.includes(model.colorActivation);
+    // a schedule-trimmed export can carry no residual units at all (0 parameter
+    // textures); its residual is identically zero, so the residual evaluation
+    // is compiled out entirely
+    const hasResidual = model.appearance === "neural" || model.paramTexData.length > 0;
+    const common = [
+        `#define N_PARAM_TEX ${model.paramTexData.length}`,
+        `#define COLOR_ACT ${model.colorActivation}`,
+        `#define BASE_ACT ${model.baseExp ? 1 : 0}`,
+        `#define COLOR_SHIFT ${shiftInShader ? "0.5" : "0.0"}`,
+        `#define RENDER_BASE ${renderBase ? 1 : 0}`,
+        `#define RENDER_RESIDUAL ${renderResidual && hasResidual ? 1 : 0}`,
+    ];
+    if (model.appearance === "sh")
+        return [...common,
+            `#define SH_DEGREE_MASK ${model.shDegreeMask}`,
+            `#define RESIDUAL_ACT ${model.residualActivation}`,
+            "",
+        ].join("\n");
+    if (model.appearance === "sv")
+        return [...common, `#define N_SITES ${model.nSites}`, ""].join("\n");
+    if (model.appearance === "nasg" || model.appearance === "nasgabor")
+        return [...common, `#define N_LOBES ${model.nLobes}`, ""].join("\n");
     let off = model.baked ? 0 : model.featureDim + (model.sh0Input ? 1 : 0);
     const degreeOff = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     for (const l of model.degrees) {
@@ -265,19 +485,16 @@ export function captureDefines(model, { renderBase, renderResidual, weightSource
         off += 2 * l + 1;
     }
     return [
+        ...common,
         `#define BAKED ${model.baked ? 1 : 0}`,
         `#define N_L0_IN ${model.l0In}`,
-        `#define N_MLP_TEX ${model.mlpTexData.length}`,
         `#define N_FEATURES ${model.featureDim}`, // legacy layout only
         `#define SH0_INPUT ${model.sh0Input ? 1 : 0}`, // legacy layout only
         `#define N_NEURONS ${model.nNeurons}`,
         `#define N_HIDDEN ${model.nHiddenLayers}`,
         `#define N_WEIGHT_TEXELS ${model.nWeightTexels}`,
         `#define SH_DEGREE_MASK ${model.shDegreeMask}`,
-        `#define COLOR_ACT ${model.colorActivation}`,
         `#define RESIDUAL_ACT ${model.residualActivation}`,
-        `#define RENDER_BASE ${renderBase ? 1 : 0}`,
-        `#define RENDER_RESIDUAL ${renderResidual ? 1 : 0}`,
         weightSource === "uniform" ? "#define WEIGHTS_UNIFORM" : "",
         precision === "fp16" ? "#define MLP_FP16" : "",
         `#define D1_OFF ${degreeOff[1]}`,
@@ -293,11 +510,12 @@ export function captureDefines(model, { renderBase, renderResidual, weightSource
 // ============================================================================
 // CPU reference implementation of the capture-pass color model — used by the
 // viewer's startup probe as ground truth for choosing the capture stage.
-// Must match shaders/mlp_eval.glsl exactly, which in turn mirrors the
-// reference implementation:
-//   base     = base_activation(base_colors)        (exp(3x) for satexp, else x;
-//              the exporter pre-bakes the relu/softplus 0.5 shift into d)
-//   residual = residual_activation(mlp(input))     (softplus β10 for satexp)
+// Must match shaders/capture_common.glsl plus the active appearance model's
+// residual chunk exactly, which in turn mirror the reference implementation:
+//   base     = base_activation(base_colors)        (exp(3x) or identity; the
+//              exporter pre-bakes the 0.5 shift of the shifted color
+//              activations into d with the identity base)
+//   residual = the appearance model's view-dependent residual
 //   color    = color_activation(base + residual)
 //   residual off -> color_activation(base)                      (degree-0 path)
 //   base off     -> |full color - base-only color|
@@ -328,7 +546,9 @@ export function buildMlpLayers(model) {
     return layers;
 }
 
-// SH basis polynomials, degrees 1-6 ascending (matches mlp_eval.glsl)
+// SH basis polynomials, degrees 1-6 ascending (matches eval_neural.glsl; the
+// sh model stores contiguous degrees 1..3, so the same flat ordering serves
+// its coefficient basis too)
 function shDegreeValues(model, d) {
     const [x, y, z] = d;
     const xy = x * y, xz = x * z, yz = y * z, x2 = x * x, y2 = y * y, z2 = z * z;
@@ -397,56 +617,176 @@ function shDegreeValues(model, d) {
 // softplus with beta 10, linear above x > 2 (matches the shader)
 const softplus10 = (x) => (x > 2 ? x : Math.log1p(Math.exp(10 * Math.min(x, 2))) * 0.1);
 
+// unpacks a splat's fp16 parameter stream (the shader's loadParams)
+function splatHalfParams(model, i) {
+    const out = [];
+    for (const tex of model.paramTexData)
+        for (let w = 0; w < tex.components; w++) {
+            const word = tex.data[i * tex.components + w];
+            out.push(halfToFloat(word), halfToFloat(word >>> 16));
+        }
+    return out;
+}
+
+// sign-extended field of a splat's bit-packed sh level (the shader's shifts)
+function packedField(data, base, fieldIdx, bits) {
+    const bit = fieldIdx * bits;
+    const wordIdx = bit >> 5, off = bit & 31;
+    let v = data[base + wordIdx] >>> off;
+    if (off + bits > 32) v |= data[base + wordIdx + 1] << (32 - off);
+    return (v << (32 - bits)) >> (32 - bits);
+}
+
+// sh: residual_activation(sum of dequantized coefficient rgb * basis)
+function shResidual(model, i, dir) {
+    // schedule-trimmed export with no stored degrees; the reference renderer
+    // returns zero BEFORE the residual activation there
+    if (!model.degrees.length) return [0, 0, 0];
+    const basis = shDegreeValues(model, dir); // flat over the stored degrees, ascending
+    const res = [0, 0, 0];
+    let basisOffset = 0;
+    model.degrees.forEach((degree, levelIdx) => {
+        const { bits } = SH_PACK_LEVELS[degree - 1];
+        const tex = model.paramTexData[levelIdx];
+        const scale = model.shScales[degree - 1] / ((1 << (bits - 1)) - 1);
+        const width = 2 * degree + 1;
+        for (let c = 0; c < width; c++)
+            for (let ch = 0; ch < 3; ch++)
+                res[ch] += basis[basisOffset + c] * scale
+                    * packedField(tex.data, i * tex.components, c * 3 + ch, bits);
+        basisOffset += width;
+    });
+    return model.residualActivation === 1 ? res.map(Math.tanh)
+        : model.residualActivation === 2 ? res.map(softplus10)
+        : res;
+}
+
+// sv: softmax(-temperature * ||site - dir||)-weighted site color sum
+function svResidual(model, i, dir) {
+    const p = splatHalfParams(model, i);
+    let maxLogit = -Infinity;
+    const logits = [];
+    for (let s = 0; s < model.nSites; s++) {
+        const dist = Math.hypot(p[7 * s] - dir[0], p[7 * s + 1] - dir[1], p[7 * s + 2] - dir[2]);
+        logits.push(-p[7 * s + 3] * dist);
+        maxLogit = Math.max(maxLogit, logits[s]);
+    }
+    let weightSum = 0;
+    const res = [0, 0, 0];
+    for (let s = 0; s < model.nSites; s++) {
+        const w = Math.exp(logits[s] - maxLogit);
+        weightSum += w;
+        for (let ch = 0; ch < 3; ch++) res[ch] += w * p[7 * s + 4 + ch];
+    }
+    return res.map((v) => v / weightSum);
+}
+
+// nasg: the nasgabor response without the Gabor term (12 values per lobe)
+function nasgResidual(model, i, dir) {
+    const p = splatHalfParams(model, i);
+    const res = [0, 0, 0];
+    for (let l = 0; l < model.nLobes; l++) {
+        const b = 12 * l;
+        const vz = dir[0] * p[b + 3] + dir[1] * p[b + 4] + dir[2] * p[b + 5];
+        const vx = dir[0] * p[b] + dir[1] * p[b + 1] + dir[2] * p[b + 2];
+        let pdf = 0;
+        if (vz >= 1 - 1e-7) {
+            pdf = 1;
+        } else if (vz > -1 + 1e-7) {
+            const K = 0.5 * (vz + 1);
+            const Ke = 5e-6 + p[b + 7] * vx * vx / (1 - vz * vz);
+            const E = Math.pow(K, Ke);
+            pdf = Math.exp(p[b + 6] * (E * K - 1)) * E * p[b + 8];
+        }
+        for (let ch = 0; ch < 3; ch++) res[ch] += pdf * p[b + 9 + ch];
+    }
+    return res;
+}
+
+// nasgabor: sum of pdf-weighted lobe colors from the baked lobe values
+function nasgaborResidual(model, i, dir) {
+    const p = splatHalfParams(model, i);
+    const res = [0, 0, 0];
+    for (let l = 0; l < model.nLobes; l++) {
+        const b = 13 * l;
+        const vz = dir[0] * p[b + 3] + dir[1] * p[b + 4] + dir[2] * p[b + 5];
+        const vx = dir[0] * p[b] + dir[1] * p[b + 1] + dir[2] * p[b + 2];
+        let pdf = 0;
+        if (vz >= 1 - 1e-7) {
+            pdf = 1;
+        } else if (vz > -1 + 1e-7) {
+            const K = 0.5 * (vz + 1);
+            const Ke = 5e-6 + p[b + 7] * vx * vx / (1 - vz * vz);
+            const E = Math.pow(K, Ke);
+            const G = 0.5 * (1 + Math.cos(p[b + 8] * vx));
+            pdf = Math.exp(p[b + 6] * (E * K - 1)) * E * G * p[b + 9];
+        }
+        for (let ch = 0; ch < 3; ch++) res[ch] += pdf * p[b + 10 + ch];
+    }
+    return res;
+}
+
+// neural: residual_activation(mlp([features, (SH_C0), sh_degrees(dir)]))
+function neuralResidual(model, layers, i, dir) {
+    // per-splat fp16 payload: h0_static (baked) or the encoded features (legacy)
+    const perSplat = splatHalfParams(model, i);
+    // layer 0: the baked layout starts from h0_static and feeds it only the
+    // direction values, the legacy layout assembles the full input vector
+    const inp = model.baked ? [] : [
+        ...perSplat.slice(0, model.featureDim),
+        ...(model.sh0Input ? [SH_C0] : []),
+    ];
+    inp.push(...shDegreeValues(model, dir));
+    while (inp.length < model.l0In) inp.push(0);
+    let h = layers[0].map((row, o) =>
+        (model.baked ? perSplat[o] : 0) + row.reduce((s, w, j) => s + w * inp[j], 0));
+    for (let l = 1; l < layers.length; l++) {
+        h = h.map((v) => Math.max(v, 0));
+        h = layers[l].map((row) => row.reduce((s, w, j) => s + w * h[j], 0));
+    }
+    return model.residualActivation === 2 ? h.map(softplus10)
+        : model.residualActivation === 1 ? h.map(Math.tanh)
+        : h;
+}
+
 export function referenceCaptureColor(model, layers, i, camPos, camFwd, { renderBase, renderResidual }) {
     const w0 = model.splatData[i * 4];
     const opacity8 = (w0 >>> 24) & 0xFF;
-    const satexp = model.colorActivation === 3;
-    const act = (x) =>
-        model.colorActivation === 1 ? softplus10(x)
-        : satexp ? -Math.expm1(-x)
-        : Math.max(x, 0);
+    // the 0.5 gray shift of the shifted color activations is baked into the
+    // stored base with the identity base activation; with the exp base it is
+    // applied here, exactly like the shader's COLOR_SHIFT
+    const shift = model.baseExp && SHIFTED_COLOR_CODES.includes(model.colorActivation) ? 0.5 : 0;
+    const act = (x) => {
+        switch (model.colorActivation) {
+            case 1: return softplus10(x + shift);
+            case 2: return 1 / (1 + Math.exp(-4 * x));
+            case 3: return -Math.expm1(-x);
+            case 4: return Math.min(Math.max(x + shift, 0), 1);
+            case 5: return x + shift;
+            default: return Math.max(x + shift, 0);
+        }
+    };
 
-    // pre-activation base d (range-coded rgb8; the relu/softplus 0.5 shift is baked
-    // in by the exporter, the satexp base is stored unshifted)
+    // pre-activation base d (range-coded rgb8)
     const d = [w0 & 0xFF, (w0 >>> 8) & 0xFF, (w0 >>> 16) & 0xFF]
         .map((c) => c * model.baseScale + model.baseOffset);
-    const baseTerm = satexp ? d.map((v) => Math.exp(3.0 * v)) : d;
+    const baseTerm = model.baseExp ? d.map((v) => Math.exp(3.0 * v)) : d;
 
-    // the capture shader skips the MLP for splats whose center is behind the
-    // camera plane (they are culled by the render pass anyway)
+    // the capture shader skips the residual for splats whose center is behind
+    // the camera plane (they are culled by the render pass anyway)
     const c = [model.centers[i * 3], model.centers[i * 3 + 1], model.centers[i * 3 + 2]];
     let rel = [c[0] - camPos[0], c[1] - camPos[1], c[2] - camPos[2]];
     const inFront = rel[0] * camFwd[0] + rel[1] * camFwd[1] + rel[2] * camFwd[2] > 0;
 
     let residual = [0, 0, 0];
     if (renderResidual && inFront) {
-        // per-splat fp16 payload: h0_static (baked) or the encoded features (legacy)
-        const perSplat = [];
-        for (let k = 0; k < model.mlpTexData.length; k++)
-            for (let w = 0; w < 4; w++) {
-                const word = model.mlpTexData[k][i * 4 + w];
-                perSplat.push(halfToFloat(word), halfToFloat(word >>> 16));
-            }
         const len = Math.hypot(...rel);
         rel = rel.map((v) => v / len);
-
-        // layer 0: the baked layout starts from h0_static and feeds it only the
-        // direction values, the legacy layout assembles the full input vector
-        const inp = model.baked ? [] : [
-            ...perSplat.slice(0, model.featureDim),
-            ...(model.sh0Input ? [SH_C0] : []),
-        ];
-        inp.push(...shDegreeValues(model, rel));
-        while (inp.length < model.l0In) inp.push(0);
-        let h = layers[0].map((row, o) =>
-            (model.baked ? perSplat[o] : 0) + row.reduce((s, w, j) => s + w * inp[j], 0));
-        for (let l = 1; l < layers.length; l++) {
-            h = h.map((v) => Math.max(v, 0));
-            h = layers[l].map((row) => row.reduce((s, w, j) => s + w * h[j], 0));
-        }
-        residual = satexp ? h.map(softplus10)
-            : model.residualActivation === 1 ? h.map(Math.tanh)
-            : h;
+        residual = model.appearance === "sh" ? shResidual(model, i, rel)
+            : model.appearance === "sv" ? svResidual(model, i, rel)
+            : model.appearance === "nasg" ? nasgResidual(model, i, rel)
+            : model.appearance === "nasgabor" ? nasgaborResidual(model, i, rel)
+            : neuralResidual(model, layers, i, rel);
     }
     const rgb = [0, 1, 2].map((k) => {
         const baseColor = act(baseTerm[k]);
