@@ -168,7 +168,7 @@ canvas {
     color: #8a8f9a;
 }
 #loading {
-    position: absolute;
+    position: fixed; /* stays at the bottom of the viewport while the gallery scrolls */
     bottom: 32px;
     left: 50%;
     transform: translateX(-50%);
