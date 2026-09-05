@@ -9,23 +9,30 @@ export async function fetchFile(path, type = "text") {
     return response[type]();
 }
 
-// Fetch a URL into an ArrayBuffer, reporting fractional progress as it streams in.
+// Fetch a URL into an ArrayBuffer with progress reporting. Chunks go into one
+// preallocated buffer (grown when the size is unknown); a Blob would double the
+// peak memory and fails on very large files.
 export async function readUrlWithProgress(url, onProgress) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Unable to load ${url} (Error ${res.status})`);
     const total = Number(res.headers.get("content-length")) || 0;
     const reader = res.body.getReader();
-    const chunks = [];
+    let data = new Uint8Array(total || 1 << 24);
     let offset = 0;
     while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        chunks.push(value);
+        if (offset + value.length > data.length) {
+            const grown = new Uint8Array(Math.max(data.length * 2, offset + value.length));
+            grown.set(data.subarray(0, offset));
+            data = grown;
+        }
+        data.set(value, offset);
         offset += value.length;
         if (total) onProgress(offset / total);
     }
     if (!total) onProgress(1);
-    return new Blob(chunks).arrayBuffer();
+    return offset === data.length ? data.buffer : data.buffer.slice(0, offset);
 }
 
 // Files of a manifest entry per appearance model: a `variants` map (model -> url),
