@@ -202,3 +202,138 @@ span.highlight {
   bottom: 17px;
   right: 16px;
 }
+
+/* Contribution cards */
+.contrib-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 10px 0 10px 0;
+}
+
+.contrib-card {
+  flex: 1 1 240px;
+  position: relative;
+  padding: 22px 20px 18px 20px;
+  border-radius: 12px;
+  background: #f7f7f9;
+  color: #333;
+  border-top: 5px solid;
+}
+
+.contrib-card.c1 {
+  border-color: #ff9500;
+}
+
+.contrib-card.c2 {
+  border-color: #30b050;
+}
+
+.contrib-card.c3 {
+  border-color: #2f8cff;
+}
+
+.contrib-card.c4 {
+  border-color: #ff2d55;
+}
+
+.contrib-num {
+  position: absolute;
+  top: 6px;
+  right: 16px;
+  font-size: 44px;
+  font-weight: 700;
+  opacity: .12;
+}
+
+.contrib-title {
+  display: block;
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  padding-right: 34px;
+  color: #333;
+}
+
+a.contrib-title:hover {
+  color: #2f8cff;
+  text-decoration: none;
+}
+
+.contrib-text {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.contrib-chips a {
+  display: inline-block;
+  margin: 0 4px 6px 0;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  color: #333;
+}
+
+.contrib-chips a:hover {
+  border-color: #2f8cff;
+  color: #2f8cff;
+  text-decoration: none;
+}
+
+.contrib-stat {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.contrib-stat b {
+  font-size: 22px;
+  color: #30b050;
+  margin-right: 4px;
+}
+
+.contrib-list {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.contrib-list li {
+  margin-bottom: 6px;
+}
+
+.contrib-chips span {
+  display: inline-block;
+  margin: 0 4px 6px 0;
+  padding: 2px 9px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Full-width insights card */
+.contrib-card.wide {
+  flex-basis: 100%;
+}
+
+.contrib-card .contrib-card {
+  background: #fff;
+}
+
+.insight-heading {
+  margin: 26px 0 12px 0;
+  font-size: 18px;
+}
+
+.insight-caption {
+  margin: 8px 0 0 0;
+  font-size: 14px;
+  text-align: center;
+}
+
+.contrib-card .contrib-grid {
+  margin-top: 26px;
+}

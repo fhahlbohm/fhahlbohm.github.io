@@ -71,12 +71,93 @@
     </div>
 
     <div class="row">
-        <div class="col-md-10 col-md-offset-1 text-center">
-            <picture>
-                <source media="(max-width: 767px)" srcset="assets/sh_vs_mlp_stacked.avif">
-                <img id="teaser" src="assets/sh_vs_mlp.avif" width="100%" alt="Comparison of 3DGS appearance models: spherical harmonics versus our latent features decoded by a shared MLP">
-            </picture>
-            <h3 class="text-success"><b>TL;DR: An efficient appearance framework and a compact neural model for 3DGS.</b></h3>
+        <div class="col-md-10 col-md-offset-1">
+            <div class="contrib-grid">
+                <div class="contrib-card c1">
+                    <div class="contrib-num">1</div>
+                    <div class="contrib-title">Appearance Framework</div>
+                    <div class="contrib-text">State-of-the-art appearance models, runtime-compiled into <a href="https://fhahlbohm.github.io/faster-gaussian-splatting/">Faster-GS</a>.</div>
+                    <div class="contrib-chips">
+                        <a href="https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/">Spherical Harmonics</a>
+                        <a href="https://sphericalvoronoi.github.io/">Spherical Voronoi</a>
+                        <a href="https://arcanous98.github.io/projectPages/beyondSH.html">NASG</a>
+                        <a href="https://arcanous98.github.io/projectPages/beyondSH.html">NASGabor</a>
+                        <span>Neural</span>
+                    </div>
+                    <div class="contrib-text">+ a WebGL viewer for all of them.</div>
+                </div>
+                <div class="contrib-card c2">
+                    <div class="contrib-num">2</div>
+                    <div class="contrib-title">Compact Neural Appearance</div>
+                    <div class="contrib-stat"><b>28</b> vs. 192 bytes / Gaussian</div>
+                    <div class="contrib-stat"><b>1.3&times;</b> faster training than SH</div>
+                    <div class="contrib-stat"><b>&ge;</b> SH in PSNR on average</div>
+                </div>
+                <div class="contrib-card c3 wide" id="insights">
+                    <div class="contrib-num">3</div>
+                    <div class="contrib-title">Insights &amp; Suggestions</div>
+
+                    <h4 class="insight-heading">Expressive appearance reduces geometric compensation</h4>
+                    <video width="100%" autoplay loop muted playsinline>
+                        <source src="assets/bonsai_expressivity.mp4" type="video/mp4"/>
+                    </video>
+                    <p class="insight-caption">
+                        SH fakes the reflection on the sketch block with elongated white Gaussians, while NASGabor models it in
+                        the view-dependent residual.
+                    </p>
+
+                    <h4 class="insight-heading">&hellip; but it also fits non-static scene content</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <video width="100%" autoplay loop muted playsinline>
+                                <source src="assets/bonsai_books_residual.mp4" type="video/mp4"/>
+                            </video>
+                            <p class="insight-caption">
+                                The topmost book moved during the capture of bonsai: SH relies on popping, while NASGabor
+                                partially fits this as a view-dependent effect.
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <video width="100%" autoplay loop muted playsinline>
+                                <source src="assets/garden_topdown_residual.mp4" type="video/mp4"/>
+                            </video>
+                            <p class="insight-caption">
+                                The residual reveals the path where the camera operator stepped on the grass during the capture
+                                of garden.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="contrib-grid">
+                        <div class="contrib-card c4">
+                            <div class="contrib-title">Problem</div>
+                            <div class="contrib-text">
+                                Benchmark gains of expressive appearance models partly measure robustness to non-static content
+                                rather than better modeling of outgoing radiance. Advancing static scene reconstruction requires
+                                evaluations that account for this, e.g., through better metrics, masking, more controlled captures,
+                                or realistic synthetic scenes.
+                            </div>
+                        </div>
+                        <div class="contrib-card c2">
+                            <div class="contrib-title">Opportunity</div>
+                            <div class="contrib-text">
+                                With expressive appearance models, the optimizer relies less on faking complex view-dependent effects through geometry.
+                                This should benefit more exact rendering methods that cannot rely on popping
+                                (e.g., <a href="https://fhahlbohm.github.io/htgs/">HTGS</a>)
+                                as well as representations using opaque surfaces
+                                (e.g., <a href="https://meshsplatting.github.io/">MeshSplatting</a>).
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="insight-heading">Side note: color activation and opacity</h4>
+                    <img src="assets/color_activation.avif" style="width:100%" alt="Effect of color activation and opacity learning rate on a test view of the garden scene for SH, NASGabor, and the neural model">
+                    <p class="insight-caption">
+                        Unbounded colors let bright regions be fit by low-opacity Gaussians with colors above one. Bounded
+                        activations avoid this and can recover sharper geometry, though the best configuration varies per scene.
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
