@@ -237,21 +237,12 @@ span.highlight {
   border-color: #ff2d55;
 }
 
-.contrib-num {
-  position: absolute;
-  top: 6px;
-  right: 16px;
-  font-size: 44px;
-  font-weight: 700;
-  opacity: .12;
-}
 
 .contrib-title {
   display: block;
   font-size: 19px;
   font-weight: 700;
   margin-bottom: 10px;
-  padding-right: 34px;
   color: #333;
 }
 
